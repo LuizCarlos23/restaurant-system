@@ -1,0 +1,82 @@
+﻿@model IEnumerable<RestaurantSystem.Models.Food>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+@if (TempData["SuccessMessage"] is not null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Name)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Description)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.BasePrice)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr id="food_@item.Id">
+            <td>
+                @Html.DisplayFor(modelItem => item.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Description)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.BasePrice)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                <button onclick="foodRemoveHandle(@item.Id)">Delete</button>
+
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+
+@section Scripts {
+    @if (Model.Count() > 0)
+    {
+        <script>
+            function foodRemoveHandle(id) {
+                if (!window.confirm("Tem certeza que deseja excluir essa comida?")) {
+                    return;
+                }
+
+                $.ajax({
+                    url: "@Url.Action("Delete")",
+                    method: "post",
+                    data: {id},
+                    success: function () {
+                        $(`#food_${id}`).remove();
+                        alert("Comida deletado com sucesso!")
+                    }
+
+                })
+            }
+        </script>
+    }
+
+}

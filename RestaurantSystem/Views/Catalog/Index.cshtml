@@ -1,0 +1,290 @@
+﻿@model IEnumerable<RestaurantSystem.Models.CatalogViewModel>
+
+@{
+	ViewData["Title"] = "Catálogo";
+}
+
+<div class="container">
+	<h1 class="text-center mb-4">Catálogo</h1>
+	
+	<h2 class="btn btn-primary" role="button" id="btnShowCart">
+		Carrinho
+	</h2>
+
+	<div class="d-flex">
+		@foreach (var item in Model)
+		{
+			<div class="card col-3 me-2" onclick="showModal(@item.FoodId)" role="button">
+				<div class="card-body d-flex flex-column justify-content-between">
+					<div>
+						<h5 class="card-title">@item.FoodName</h5>
+						<p class="card-text">@item.FoodDescription</p>
+					</div>
+					<div class="align-self-end mt-3">
+						<span>@item.FoodPrice</span>
+					</div>
+				</div>
+			</div>
+		}
+	</div>
+</div>
+
+<div class="offcanvas offcanvas-end" tabindex="-1" id="shoppingCart" aria-labelledby="shoppingCartLabel"> 
+ 	<div class="offcanvas-header"> 
+ 		<h5 class="offcanvas-title" id="shoppingCartLabel">Carrinho de compras</h5> 
+ 	</div>
+	<div class="offcanvas-body">
+		<div id="order">
+			<div id="orderItems">
+				
+			</div>
+
+			<div class="text-end mt-2">
+				Valor Total: <span id="cartTotalPrice">R$ 100.00</span>
+			</div>
+		</div>
+		
+		<div>
+			<button class="btn btn-success" id="btnBuy">
+				Finalizar Compra
+			</button>
+		</div>
+	 </div>
+ </div>
+
+<div class="modal fade" id="modalBuy" tabindex="-1" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="modelTitle"></h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+
+			<div class="modal-body row">
+
+				@* // TODO: Adicionar foto *@
+				<div class="col-6">
+
+				</div>
+
+				<div class="col-6">
+
+					<div class="food-description mb-4">
+						<p id="modalFoodDescription"></p>
+						<span id="modalFoodBasePrice" class="text-end"></span>
+					</div>
+
+					<h5>Ingredientes Adicionais</h5>
+					<form id="formOptionalIngredients">
+						<div id="modalFoodOptionalIngredients">
+						</div>
+					</form>
+				</div>
+
+			</div>
+
+			<div class="modal-footer">
+				<input type="number" value="1" min="1" class="col-1 border-0" id="foodQuantity" />
+				<button type="button" class="btn btn-success col-3 d-flex justify-content-between" id="modalAddItemBtn">
+					<span>Adicionar</span>
+					<span id="modalFoodPrice"></span>
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+@section Scripts {
+	@{
+		await Html.RenderPartialAsync("_ValidationScriptsPartial");
+	}
+
+	<script>
+
+		let currentFood = {};
+		let currentFoodToAdd = {};
+
+		$("#foodQuantity").on("change", function () {
+			let quantity = Number($(this).val());
+			changeFoodQuantity(quantity);
+		})
+
+		$("#formOptionalIngredients").on("change", function () {
+			let checkboxElements = $("#formOptionalIngredients input:checkbox:checked");
+			let optionalIngredients = []
+			checkboxElements.each( (_, element) => {
+				optionalIngredients.push(Number($(element).val()))
+			})
+			addOptinoalIngredients(optionalIngredients)
+		})
+
+		$("#modalAddItemBtn").on("click", function () {
+			console.log(currentFoodToAdd);
+			addItemToCart();
+			$("#modalBuy").modal('toggle');
+		})
+
+		$("#btnShowCart").on("click", function () {
+			getOrder()
+			let cart = new bootstrap.Offcanvas($("#shoppingCart"))
+			cart.show()
+		})
+
+		$("#btnBuy").on("click", function () {
+			buyHandle()
+		})
+
+		function addOptinoalIngredients(ingredientsIds = []) {
+			currentFoodToAdd.selectedOptionalIngredients = ingredientsIds;
+
+			updateFoodTotalPrice();
+		}
+
+		function changeFoodQuantity(quantity) {
+			currentFoodToAdd.quantity = quantity;
+			updateFoodTotalPrice();
+		}
+
+		function getSumIngredientsPrice() {
+			let sumIngredientsPrices = 0;
+			let detailsSelectedIngredients = currentFood.OptionalIngredients["$values"]
+				.filter(ingredient =>
+					currentFoodToAdd.selectedOptionalIngredients.indexOf(ingredient.Id) != -1
+				);
+			
+			detailsSelectedIngredients.map(ingredient => 
+				sumIngredientsPrices += ingredient.Price 
+			);
+
+			return sumIngredientsPrices;
+		}
+
+		function updateFoodTotalPrice(){
+			currentFoodToAdd.totalPrice = Number((currentFoodToAdd.basePrice + getSumIngredientsPrice()) * currentFoodToAdd.quantity).toFixed(2);
+			updatePriceViewer()
+		}
+
+		function updatePriceViewer() {
+			$("#modalFoodPrice").text(`R$ ${Number(currentFoodToAdd.totalPrice).toFixed(2)}`);
+		}
+
+		function showModal(id) {
+			currentFood = {};
+			currentFoodToAdd = {};
+			$("#foodQuantity").val(1)
+			
+			$.ajax({
+				url: "@Url.Action("GetFood", "Food")"+`/${id}`,
+				type: "url",
+				datatype: "json",
+				success: function(response) {
+					// console.log(response.OptionalIngredients["$values"]);
+					currentFood = response
+					currentFoodToAdd = {
+						foodId: response.Id,
+						basePrice: response.BasePrice,
+						totalPrice: response.BasePrice * 1,
+						quantity: 1,
+						selectedOptionalIngredients: []
+					}
+
+					$("#modelTitle").text(response.Name);
+					$("#modalFoodDescription").text(response.Description);
+					$("#modalFoodBasePrice").text(`R$${Number(response.BasePrice).toFixed(2)}`);
+				
+					$("#modalFoodOptionalIngredients").html("");
+
+					response.OptionalIngredients["$values"].map(ingredient => {
+						let newElement = `
+							<div class="form-check">
+								<input class="form-check-input" type="checkbox" value="${ingredient.Id}" id="checkbox_${ingredient.Id}">
+								<label class="form-check-label" for="checkbox_${ingredient.Id}">
+									${ingredient.Name} - R$${Number(ingredient.Price).toFixed(2)}
+								</label>
+							</div>
+						`
+
+						$("#modalFoodOptionalIngredients").append(newElement);
+					})
+
+					updatePriceViewer(response.BasePrice)
+					$("#modalBuy").modal('show');
+				},
+				error: function() { alert("Ocorreu um error") }
+			});
+
+		}
+
+		function addItemToCart() {
+			let body = { 
+				FoodID: currentFoodToAdd.foodId, 
+				quantity: currentFoodToAdd.quantity,
+				selectedOptionalIngredients: currentFoodToAdd.selectedOptionalIngredients 
+			}
+
+			$.ajax({
+				url: "@Url.Action("AddOrderItem", "Order")",
+				type: "url",
+				method: "post",
+				data: body,
+				datatype: "json",
+				success: function(response) {
+					console.log(response)
+					alert("Adicionado com sucesso!");
+				},
+				error: function(response) {
+					alert("Ocorreu um erro!");
+					console.log(response)
+				}
+			});
+		}
+
+		function getOrder() {
+			$("#orderItems").html("");
+
+			$.ajax({
+				url: "@Url.Action("GetOrder", "Order")",
+				type: "url",
+				datatype: "json",
+				success: function(response) {
+					console.log(response)
+
+					response?.orderItems?.map(item => {
+						let newElement = `
+							<div class="orderItem d-flex justify-content-around flex-row">
+								<div>${item.food.name}</div>
+								<div>${item.quantity}</div>
+								<div>R$ ${ Number(item.totalPrice).toFixed(2) }</div>
+							</div>
+						`
+
+						$("#orderItems").append(newElement);
+					})
+
+					$("#cartTotalPrice").text( Number(response?.totalPrice).toFixed(2) )
+				},
+				error: function(response) {
+					alert("Ocorreu um erro!");
+					console.log(response)
+				}
+			});
+		}
+
+		function buyHandle()
+		{
+			$.ajax({
+				url: "@Url.Action("Buy", "Order")",
+				type: "url",
+				datatype: "json",
+				success: function(response) {
+					alert("Obrigado pela compra")
+				},
+				error: function(response) {
+					alert("Ocorreu um erro ao finalizar a compra!");
+					console.log(response)
+				}
+			});
+		}
+	</script>
+}

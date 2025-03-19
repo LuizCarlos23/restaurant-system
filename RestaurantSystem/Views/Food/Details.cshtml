@@ -1,0 +1,83 @@
+﻿@model RestaurantSystem.Models.Food
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <div class="row">
+        <div class="col">
+            <h4 class="text-center">Food</h4>
+        </div>
+        <div class="col">
+            <h4 class="text-center">Ingredientes Opcionais</h4>
+        </div>
+    </div>
+    
+    <hr />
+    <div class="row">
+        <div class="col">
+            <dl class="row">
+                <dt class="col-sm-2">
+                    @Html.DisplayNameFor(model => model.Name)
+                </dt>
+                <dd class="col-sm-10">
+                    @Html.DisplayFor(model => model.Name)
+                </dd>
+                <dt class="col-sm-2">
+                    @Html.DisplayNameFor(model => model.Description)
+                </dt>
+                <dd class="col-sm-10">
+                    @Html.DisplayFor(model => model.Description)
+                </dd>
+                <dt class="col-sm-2">
+                    @Html.DisplayNameFor(model => model.BasePrice)
+                </dt>
+                <dd class="col-sm-10">
+                    @Html.DisplayFor(model => model.BasePrice)
+                </dd>
+            </dl>
+        </div>
+
+        <table class="table col">
+            <thead>
+                <tr>
+                    <th>
+                        Nome
+                    </th>
+                    <th>
+                        Preço
+                    </th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.OptionalIngredients is not null)
+                {
+                    @foreach (var item in Model.OptionalIngredients)
+                    {
+                        <tr id="ingredient_@item.Id">
+                            <td>
+                                @Html.DisplayFor(modelItem => item.Name)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.Price)
+                            </td>
+                            <td>
+                                <button onclick="removeIngredientFromFoodHandle(@item.Id)">Remover</button>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+<div>
+    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
+    <a asp-action="Index">Back to List</a>
+</div>

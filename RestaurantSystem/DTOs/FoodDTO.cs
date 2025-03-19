@@ -23,6 +23,10 @@ namespace RestaurantSystem.DTOs
         [DisplayName("Preço")]
         public decimal BasePrice { get; set; }
 
+        public IFormFile? Image { get; set; }
+
+        public string? ImageMimeType { get; set; }
+
         [AllowNull]
         public ICollection<long>? OptionalIngredients { get; set; }
     }

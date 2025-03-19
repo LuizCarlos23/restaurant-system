@@ -22,6 +22,12 @@ namespace RestaurantSystem.Models
         [DisplayName("Preço")]
         public decimal BasePrice { get; set; }
 
+        [DisplayName("Imagem")]
+        public byte[]? Image { get; set; }
+
+        public string? ImageMimeType { get; set; }
+        public string? ImageFileName { get; set; }
+
         [AllowNull]
         public ICollection<Ingredient>? OptionalIngredients { get; set; }
     }

@@ -10,7 +10,7 @@
 <hr />
 <div class="row">
     <div class="col-md-4">
-        <form asp-action="Edit">
+        <form asp-action="Edit" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
             <div class="form-group">
@@ -29,6 +29,11 @@
                 <span asp-validation-for="BasePrice" class="text-danger"></span>
             </div>
             <div class="form-group">
+                <label asp-for="Image" class="form-label"></label>
+                <input asp-for="Image" type="file" class="form-control" />
+                <span asp-validation-for="Image" class="text-danger"></span>
+            </div>
+            <div class="form-group">
                 <label asp-for="OptionalIngredients"></label>
                 <select class="form-control" asp-for="OptionalIngredients" asp-items="@ViewBag.OptionalIngredients" multiple="multiple">
                 </select>
@@ -38,6 +43,13 @@
             </div>
         </form>
     </div>
+    <div class="col-md-8 d-flex flex-column justify-content-center align-items-center">
+        <img style="max-width: 500px; max-height: 500px;" src="@Url.Action("GetImage", "Food", new { Id = Model.Id} )" class="img-thumbnail" alt="Imamge do alimento @Model.Id" id="foodImage" onerror="this.onerror=null; this.src='/img/default-image.jpg';">
+        
+        <button onclick="removeImageHandle()">
+            Remover Imagem
+        </button>
+    </div>
 </div>
 
 <div>
@@ -45,5 +57,24 @@
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+
+    <script>
+        function removeImageHandle() {
+            if (!window.confirm("Tem certeza que deseja remover a imagem? "))
+                return
+
+            $.ajax({
+                url: "@Url.Action("RemoveImageFood", "Food", new { foodId = Model.Id })",
+                method: "delete",
+                success: function () {
+                    alert("Imagem removida com sucesso!")
+                    $("#foodImage").attr("srcset", "/img/default-image.jpg")
+                },
+                error: function () {
+                    alert("Ocorreu um error ao remover a imagem!")
+                }
+            })
+        }
+    </script>
 }

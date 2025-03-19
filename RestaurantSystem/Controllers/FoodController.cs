@@ -2,6 +2,7 @@
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.EntityFrameworkCore;
 using NuGet.Packaging;
 using RestaurantSystem.Data;
@@ -52,6 +53,18 @@ namespace RestaurantSystem.Controllers
                 BasePrice = food.BasePrice
             };
 
+            if (food.Image is not null)
+            {
+                using (var stream = new MemoryStream())
+                {
+                    await food.Image.CopyToAsync(stream);
+                    entity.Image = stream.ToArray();
+                    entity.ImageMimeType = food.Image.ContentType;
+                    entity.ImageFileName = food.Image.FileName;
+                }
+            }
+            
+
             if (food.OptionalIngredients is not null)
             {
                 var optionalIngredients = _context.Ingredients.Where(i => food.OptionalIngredients.Contains(i.Id)).ToList();
@@ -79,7 +92,6 @@ namespace RestaurantSystem.Controllers
 
         public async Task<IActionResult> Edit(long id)
         {
-
             var food = await _context.Foods.Include(f => f.OptionalIngredients).SingleOrDefaultAsync(f => f.Id == id);
 
             if (food is null)
@@ -101,6 +113,7 @@ namespace RestaurantSystem.Controllers
 
             var dto = new FoodDTO()
             {
+                Id = food.Id,
                 Name = food.Name,
                 Description = food.Description,
                 BasePrice = food.BasePrice
@@ -116,6 +129,9 @@ namespace RestaurantSystem.Controllers
             if (food.Id != id)
                 return NotFound();
 
+            if (!ModelState.IsValid)
+                return View(food);
+
 
             var entity = await _context.Foods.Include(f => f.OptionalIngredients).FirstOrDefaultAsync(f => f.Id == id);
             if (entity is null)
@@ -124,6 +140,17 @@ namespace RestaurantSystem.Controllers
             entity.Name = food.Name;
             entity.Description = food.Description;
             entity.BasePrice = food.BasePrice;
+
+            if (food.Image is not null)
+            {
+                using (var stream = new MemoryStream())
+                {
+                    await food.Image.CopyToAsync(stream);
+                    entity.Image = stream.ToArray();
+                    entity.ImageMimeType = food.Image.ContentType;
+                    entity.ImageFileName = food.Image.FileName;
+                }
+            }
 
 
             if (food.OptionalIngredients is not null)
@@ -139,6 +166,22 @@ namespace RestaurantSystem.Controllers
             ViewData["SuccessMessage"] = "Comida atualizada com sucesso!";
 
             return RedirectToAction("Index");
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> RemoveImageFood(long foodId)
+        {
+            var food = await _context.Foods.SingleOrDefaultAsync(f => f.Id == foodId);
+            if (food is null)
+                return NotFound();
+
+            food.Image = null;
+            food.ImageFileName = null;
+            food.ImageMimeType = null;
+
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
 
         [HttpPost]
@@ -161,5 +204,14 @@ namespace RestaurantSystem.Controllers
 
             return Json(food, new JsonSerializerOptions() { ReferenceHandler = ReferenceHandler.Preserve });
         }
+
+        public async Task<IActionResult?> GetImage(long id)
+        {
+            var food = await _context.Foods.SingleOrDefaultAsync(f => f.Id == id);
+            if (food is null || food?.ImageMimeType is null)
+                return NotFound();
+
+            return File(food.Image, food.ImageMimeType);
+        } 
     }
 }

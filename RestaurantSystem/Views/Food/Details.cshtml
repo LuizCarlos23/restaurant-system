@@ -19,6 +19,8 @@
     <hr />
     <div class="row">
         <div class="col">
+            <img style="max-width: 500px; max-height: 500px;" src="@Url.Action("GetImage", "Food", new { Id = Model.Id} )" class="img-thumbnail" alt="Imamge do alimento @Model.Id" id="foodImage" onerror="this.onerror=null; this.src='/img/default-image.jpg';">
+
             <dl class="row">
                 <dt class="col-sm-2">
                     @Html.DisplayNameFor(model => model.Name)

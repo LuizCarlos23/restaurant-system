@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RestaurantSystem.Data;
 using RestaurantSystem.DTOs;
@@ -6,6 +7,7 @@ using RestaurantSystem.Models;
 
 namespace RestaurantSystem.Controllers
 {
+    [Authorize]
     public class IngredientController : Controller
     {
         public readonly ApplicationDbContext _context;

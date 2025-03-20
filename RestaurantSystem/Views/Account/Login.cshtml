@@ -1,0 +1,51 @@
+﻿@model RestaurantSystem.Models.UserLoginViewModel
+
+@{
+    ViewData["Title"] = "Login";
+}
+
+
+<div class="d-flex flex-column justify-content-center align-items-center">
+    <h1>Login</h1>
+    <div class="row vw-100">
+        <div class="col-md-4"></div>
+        <div class="col-md-4 align-self-center">
+            <form asp-action="Login" asp-route-returnurl="@ViewData["ReturnUrl"]">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="form-group">
+                    <label asp-for="Email" class="control-label"></label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Password" class="control-label"></label>
+                    <input asp-for="Password" class="form-control" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" asp-for="RememberMe">
+                    <label class="form-check-label" asp-for="RememberMe">
+                    </label>
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <div class="form-group">
+                        <input type="submit" value="Login" class="btn btn-primary" />
+                    </div>
+
+                    @Html.ActionLink("Caso não possua uma conta, registre-se aqui", "Register")
+                </div>
+            </form>
+        </div>
+        <div class="col-md-4"></div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
+
+

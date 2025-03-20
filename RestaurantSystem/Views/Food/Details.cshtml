@@ -68,7 +68,7 @@
                                 @Html.DisplayFor(modelItem => item.Price)
                             </td>
                             <td>
-                                <button onclick="removeIngredientFromFoodHandle(@item.Id)">Remover</button>
+                                <button onclick="removeIngredientFromFoodHandle(@Model.Id, @item.Id)">Remover</button>
                             </td>
                         </tr>
                     }
@@ -83,3 +83,27 @@
     <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
     <a asp-action="Index">Back to List</a>
 </div>
+
+@section Scripts {
+
+    <script>
+        function removeIngredientFromFoodHandle(foodId, ingredientId) {
+            if (!window.confirm("Tem certeza que deseja remover esse ingrediente opcional da comida?"))
+                return;
+
+            $.ajax({
+                url: "@Url.Action("RemoveIngredient", "Food")",
+                method: "post",
+                data: { foodId, ingredientId },
+                success: () => {
+                    alert("Ingrediente removido com sucesso!");
+                    $(`#ingredient_${ingredientId}`).remove();
+                },
+                error: () => {
+                    alert("Ocorreu um error ao remover o ingrediente!");
+                }
+            });
+        }
+    </script>
+
+}

@@ -1,5 +1,7 @@
-﻿using System.Text.Json;
+﻿using System.Runtime.InteropServices;
+using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.SignalR.Protocol;
@@ -11,6 +13,7 @@ using RestaurantSystem.Models;
 
 namespace RestaurantSystem.Controllers
 {
+    [Authorize]
     public class FoodController : Controller
     {
         public readonly ApplicationDbContext _context;
@@ -212,6 +215,24 @@ namespace RestaurantSystem.Controllers
                 return NotFound();
 
             return File(food.Image, food.ImageMimeType);
-        } 
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RemoveIngredient(long foodId, long ingredientId)
+        {
+            var food = await _context.Foods.Include(f => f.OptionalIngredients).SingleOrDefaultAsync(f => f.Id == foodId);
+            if (food is null || food.OptionalIngredients is null)
+                return NotFound();
+
+            var ingredient = food.OptionalIngredients.SingleOrDefault(i => i.Id == ingredientId);
+
+            if (ingredient is null)
+                return NotFound();
+
+            food.OptionalIngredients.Remove(ingredient);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
     }
 }

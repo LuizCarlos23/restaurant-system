@@ -64,8 +64,8 @@
 
 			<div class="modal-body row">
 
-				@* // TODO: Adicionar foto *@
 				<div class="col-6">
+					<img src="" class="card-img-top" alt="Imamge do alimento" onerror="this.onerror=null; this.src='/img/default-image.jpg';" id="modalImgFood"/>
 
 				</div>
 
@@ -181,7 +181,7 @@
 				type: "url",
 				datatype: "json",
 				success: function(response) {
-					// console.log(response.OptionalIngredients["$values"]);
+					console.log(response);
 					currentFood = response
 					currentFoodToAdd = {
 						foodId: response.Id,
@@ -190,6 +190,11 @@
 						quantity: 1,
 						selectedOptionalIngredients: []
 					}
+
+					$("#modalImgFood").attr("onerror", "")
+					$("#modalImgFood").attr("src", "")
+					$("#modalImgFood").attr("src", `/Food/GetImage/${response.Id}`)
+					$("#modalImgFood").attr("onerror", "this.onerror=null; this.src='/img/default-image.jpg';")
 
 					$("#modelTitle").text(response.Name);
 					$("#modalFoodDescription").text(response.Description);

@@ -2,12 +2,14 @@
 using System.Numerics;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Logging;
 using Newtonsoft.Json;
 using RestaurantSystem.Data;
 using RestaurantSystem.DTOs;
+using RestaurantSystem.Enums;
 using RestaurantSystem.Models;
 
 namespace RestaurantSystem.Controllers
@@ -16,10 +18,12 @@ namespace RestaurantSystem.Controllers
     public class OrderController : Controller
     {
         public readonly ApplicationDbContext _context;
+        public readonly UserManager<ApplicationUser> _userManager;
 
-        public OrderController(ApplicationDbContext context)
+        public OrderController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         [HttpPost]
@@ -123,13 +127,20 @@ namespace RestaurantSystem.Controllers
                     Food = food,
                     OptionalIngredientsSelected = ingredients,
                     Quantity = item.Quantity,
-                    TotalPrice = ( food.BasePrice + sumIngredientsPrices) * item.Quantity,
+                    TotalPrice = ( food.BasePrice + sumIngredientsPrices) * item.Quantity
                 };
 
                 orderEntity.OrderedItems.Add(orderItemEntity);
             }
             
             orderEntity.TotalPrice = orderEntity.OrderedItems.Sum(i => i.TotalPrice);
+            var user = await _userManager.GetUserAsync(User);
+            if (user is null)
+                return NotFound();
+
+            orderEntity.User = user;
+            orderEntity.OrderDate = DateTime.UtcNow;
+            orderEntity.Status = Status.Pending;
 
             _context.Orders.Add(orderEntity);
             await _context.SaveChangesAsync();
@@ -139,5 +150,6 @@ namespace RestaurantSystem.Controllers
 
             return Ok();
         }
+
     }
 }

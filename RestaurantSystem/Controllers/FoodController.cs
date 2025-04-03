@@ -201,6 +201,7 @@ namespace RestaurantSystem.Controllers
             return Ok();
         }
 
+        [AllowAnonymous]
         public async Task<JsonResult> GetFood(long id)
         {
             var food = await _context.Foods.Include(f => f.OptionalIngredients).SingleOrDefaultAsync(f => f.Id == id);
@@ -208,6 +209,7 @@ namespace RestaurantSystem.Controllers
             return Json(food, new JsonSerializerOptions() { ReferenceHandler = ReferenceHandler.Preserve });
         }
 
+        [AllowAnonymous]
         public async Task<IActionResult?> GetImage(long id)
         {
             var food = await _context.Foods.SingleOrDefaultAsync(f => f.Id == id);

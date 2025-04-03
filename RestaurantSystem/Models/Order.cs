@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using RestaurantSystem.Enums;
 
 namespace RestaurantSystem.Models
 {
@@ -12,5 +13,14 @@ namespace RestaurantSystem.Models
 
         [Required]
         public decimal TotalPrice { get; set; }
+
+        [Required]
+        public ApplicationUser User { get; set; }
+
+        [Required]
+        public DateTime OrderDate { get; set; }
+
+        [Required]
+        public Status Status { get; set; }
     }
 }

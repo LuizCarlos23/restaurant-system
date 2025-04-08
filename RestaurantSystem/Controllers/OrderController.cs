@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Logging;
 using Newtonsoft.Json;
-using RestaurantSystem.Data;
+using RestaurantSystem.Data.Context;
 using RestaurantSystem.DTOs;
 using RestaurantSystem.Enums;
 using RestaurantSystem.Models;

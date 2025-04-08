@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using RestaurantSystem.Data;
+using RestaurantSystem.Data.Context;
+using RestaurantSystem.Data.Repositories;
 using RestaurantSystem.DTOs;
 using RestaurantSystem.Models;
 
@@ -10,16 +11,16 @@ namespace RestaurantSystem.Controllers
     [Authorize]
     public class IngredientController : Controller
     {
-        public readonly ApplicationDbContext _context;
+        public readonly IUnitOfWork _uow;
 
-        public IngredientController(ApplicationDbContext context)
+        public IngredientController(IUnitOfWork uow)
         {
-            _context = context;
+            _uow = uow;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var ingredients = _context.Ingredients.ToList();
+            var ingredients = await _uow.IngredientRepo.GetAllAsync();
 
             return View(ingredients);
         }
@@ -36,8 +37,8 @@ namespace RestaurantSystem.Controllers
             if (!ModelState.IsValid)
                 View(ingredient);
 
-            await _context.Ingredients.AddAsync(new Ingredient { Name = ingredient.Name, Price = ingredient.Price });
-            await _context.SaveChangesAsync();
+            await _uow.IngredientRepo.AddAsync(new Ingredient { Name = ingredient.Name, Price = ingredient.Price });
+            await _uow.CommitAsync();
 
             TempData["SuccessMessage"] = "Ingrediente cadastrado com sucesso!";
             return RedirectToAction("Index");
@@ -45,7 +46,7 @@ namespace RestaurantSystem.Controllers
 
         public async Task<IActionResult> Edit(long id)
         {
-            var ingredient = await _context.Ingredients.SingleOrDefaultAsync(i => i.Id == id);
+            var ingredient = await _uow.IngredientRepo.GetByIdAsync(id);
             if (ingredient is null)
                 return NotFound();
 
@@ -67,16 +68,16 @@ namespace RestaurantSystem.Controllers
                 return NotFound();
             else if (!ModelState.IsValid)
                 return View(ingredient);
-            
 
-            _context.Ingredients.Update(new Ingredient()
+
+            _uow.IngredientRepo.Update(new Ingredient()
             {
                 Id = (long)ingredient.Id,
                 Name = ingredient.Name,
                 Price = ingredient.Price
             });
 
-            await _context.SaveChangesAsync();
+            await _uow.CommitAsync();
 
             TempData["SuccessMessage"] = "Ingrediente alterado com sucesso!";
             return RedirectToAction("Index");
@@ -85,12 +86,12 @@ namespace RestaurantSystem.Controllers
         [HttpPost]
         public async Task<IActionResult> Delete(long id)
         {
-            var ingredient = await _context.Ingredients.SingleOrDefaultAsync(i => i.Id == id);
+            var ingredient = await _uow.IngredientRepo.GetByIdAsync(id);
             if (ingredient is null)
                 return BadRequest();
 
-            _context.Ingredients.Remove(ingredient);
-            await _context.SaveChangesAsync();
+            _uow.IngredientRepo.Delete(ingredient);
+            await _uow.CommitAsync();
 
             return Ok();
         }

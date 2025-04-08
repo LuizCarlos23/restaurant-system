@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using RestaurantSystem.Models;
 
-namespace RestaurantSystem.Data
+namespace RestaurantSystem.Data.Context
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {

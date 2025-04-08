@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using RestaurantSystem.Data;
+using RestaurantSystem.Data.Context;
 using RestaurantSystem.DTOs;
 using RestaurantSystem.Models;
 

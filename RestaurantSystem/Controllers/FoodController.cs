@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.EntityFrameworkCore;
 using NuGet.Packaging;
-using RestaurantSystem.Data;
+using RestaurantSystem.Data.Context;
 using RestaurantSystem.DTOs;
 using RestaurantSystem.Models;
 

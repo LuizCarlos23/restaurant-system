@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using RestaurantSystem.Data;
+using RestaurantSystem.Data.Context;
 using RestaurantSystem.Models;
 
 namespace RestaurantSystem.Controllers

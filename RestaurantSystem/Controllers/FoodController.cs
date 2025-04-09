@@ -1,6 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.EntityFrameworkCore;
 using NuGet.Packaging;
 using RestaurantSystem.Data.Context;
+using RestaurantSystem.Data.Repositories;
 using RestaurantSystem.DTOs;
 using RestaurantSystem.Models;
 
@@ -16,27 +18,22 @@ namespace RestaurantSystem.Controllers
     [Authorize]
     public class FoodController : Controller
     {
-        public readonly ApplicationDbContext _context;
+        public readonly IUnitOfWork _uow;
 
-        public FoodController(ApplicationDbContext context)
+        public FoodController(IUnitOfWork uow, ApplicationDbContext context)
         {
-            _context = context;
+            _uow = uow;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var foods = _context.Foods.ToList();
+            var foods = await _uow.FoodRepo.GetAllAsync();
             return View(foods);
         }
 
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            var ingredients = _context.Ingredients
-                .Select(i => new 
-                {
-                    i.Id, 
-                    Description = $"{i.Name} - R${i.Price:N2}" 
-                }).ToList();
+            var ingredients = await _uow.IngredientRepo.GetAllForSelectAsync();
 
             ViewBag.OptionalIngredients = new MultiSelectList(ingredients, "Id", "Description");
             return View();
@@ -66,17 +63,17 @@ namespace RestaurantSystem.Controllers
                     entity.ImageFileName = food.Image.FileName;
                 }
             }
-            
+
 
             if (food.OptionalIngredients is not null)
             {
-                var optionalIngredients = _context.Ingredients.Where(i => food.OptionalIngredients.Contains(i.Id)).ToList();
+                var optionalIngredients = await _uow.IngredientRepo.GetIngredientsByListIdAsync(food.OptionalIngredients);
                 entity.OptionalIngredients = optionalIngredients;
             }
-                       
 
-            _context.Foods.Add(entity);
-            await _context.SaveChangesAsync();
+
+            await _uow.FoodRepo.AddAsync(entity);
+            await _uow.CommitAsync();
 
             ViewData["SuccessMessage"] = "Comida cadastrada com sucesso!";
 
@@ -85,7 +82,7 @@ namespace RestaurantSystem.Controllers
 
         public async Task<IActionResult> Details(long id)
         {
-            var food = await _context.Foods.Include(f => f.OptionalIngredients).SingleOrDefaultAsync(f => f.Id == id);
+            var food = await _uow.FoodRepo.GetByIdWithIngredientsAsync(id);
 
             if (food is null)
                 return NotFound();
@@ -95,7 +92,7 @@ namespace RestaurantSystem.Controllers
 
         public async Task<IActionResult> Edit(long id)
         {
-            var food = await _context.Foods.Include(f => f.OptionalIngredients).SingleOrDefaultAsync(f => f.Id == id);
+            var food = await _uow.FoodRepo.GetByIdWithIngredientsAsync(id);
 
             if (food is null)
                 return NotFound();
@@ -106,11 +103,7 @@ namespace RestaurantSystem.Controllers
                 selectedIngredients = food.OptionalIngredients.Select(i => i.Id).ToList();
             }
 
-            var ingredients = _context.Ingredients.Select(i => new
-            {
-                i.Id,
-                Description = $"{i.Name} - {i.Price}"
-            }).ToList();
+            var ingredients = await _uow.IngredientRepo.GetAllForSelectAsync();
 
             ViewBag.OptionalIngredients = new MultiSelectList(ingredients, "Id", "Description", selectedIngredients);
 
@@ -136,7 +129,7 @@ namespace RestaurantSystem.Controllers
                 return View(food);
 
 
-            var entity = await _context.Foods.Include(f => f.OptionalIngredients).FirstOrDefaultAsync(f => f.Id == id);
+            var entity = await _uow.FoodRepo.GetByIdWithIngredientsAsync(id);
             if (entity is null)
                 return NotFound();
 
@@ -158,13 +151,13 @@ namespace RestaurantSystem.Controllers
 
             if (food.OptionalIngredients is not null)
             {
-                var ingredients = _context.Ingredients.Where(i => food.OptionalIngredients.Contains(i.Id)).ToList();
+                var ingredients = await _uow.IngredientRepo.GetIngredientsByListIdAsync(food.OptionalIngredients);
                 entity.OptionalIngredients?.Clear();
                 entity.OptionalIngredients.AddRange(ingredients);
             }
 
-            _context.Foods.Update(entity);
-            await _context.SaveChangesAsync();
+            _uow.FoodRepo.Update(entity);
+            await _uow.CommitAsync();
 
             ViewData["SuccessMessage"] = "Comida atualizada com sucesso!";
 
@@ -174,7 +167,7 @@ namespace RestaurantSystem.Controllers
         [HttpDelete]
         public async Task<IActionResult> RemoveImageFood(long foodId)
         {
-            var food = await _context.Foods.SingleOrDefaultAsync(f => f.Id == foodId);
+            var food = await _uow.FoodRepo.GetByIdAsync(foodId);
             if (food is null)
                 return NotFound();
 
@@ -182,7 +175,7 @@ namespace RestaurantSystem.Controllers
             food.ImageFileName = null;
             food.ImageMimeType = null;
 
-            await _context.SaveChangesAsync();
+            await _uow.CommitAsync();
 
             return NoContent();
         }
@@ -190,13 +183,13 @@ namespace RestaurantSystem.Controllers
         [HttpPost]
         public async Task<IActionResult> Delete(long id)
         {
-            var food = await _context.Foods.SingleOrDefaultAsync(f => f.Id == id);
+            var food = await _uow.FoodRepo.GetByIdWithIngredientsAsync(id);
 
             if (food is null)
                 return NotFound();
 
-            _context.Foods.Remove(food);
-            await _context.SaveChangesAsync();
+            _uow.FoodRepo.Delete(food);
+            await _uow.CommitAsync();
 
             return Ok();
         }
@@ -204,7 +197,7 @@ namespace RestaurantSystem.Controllers
         [AllowAnonymous]
         public async Task<JsonResult> GetFood(long id)
         {
-            var food = await _context.Foods.Include(f => f.OptionalIngredients).SingleOrDefaultAsync(f => f.Id == id);
+            var food = await _uow.FoodRepo.GetByIdWithIngredientsAsync(id);
 
             return Json(food, new JsonSerializerOptions() { ReferenceHandler = ReferenceHandler.Preserve });
         }
@@ -212,7 +205,7 @@ namespace RestaurantSystem.Controllers
         [AllowAnonymous]
         public async Task<IActionResult?> GetImage(long id)
         {
-            var food = await _context.Foods.SingleOrDefaultAsync(f => f.Id == id);
+            var food = await _uow.FoodRepo.GetByIdAsync(id);
             if (food is null || food?.ImageMimeType is null)
                 return NotFound();
 
@@ -222,7 +215,7 @@ namespace RestaurantSystem.Controllers
         [HttpPost]
         public async Task<IActionResult> RemoveIngredient(long foodId, long ingredientId)
         {
-            var food = await _context.Foods.Include(f => f.OptionalIngredients).SingleOrDefaultAsync(f => f.Id == foodId);
+            var food = await _uow.FoodRepo.GetByIdWithIngredientsAsync(foodId);
             if (food is null || food.OptionalIngredients is null)
                 return NotFound();
 
@@ -232,7 +225,7 @@ namespace RestaurantSystem.Controllers
                 return NotFound();
 
             food.OptionalIngredients.Remove(ingredient);
-            await _context.SaveChangesAsync();
+            await _uow.CommitAsync();
 
             return NoContent();
         }

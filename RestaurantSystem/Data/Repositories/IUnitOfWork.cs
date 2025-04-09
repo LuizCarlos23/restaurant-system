@@ -1,10 +1,13 @@
-﻿using RestaurantSystem.Models;
+﻿using RestaurantSystem.Data.Repositories.Food;
+using RestaurantSystem.Data.Repositories.Ingredient;
+using RestaurantSystem.Models;
 
 namespace RestaurantSystem.Data.Repositories
 {
     public interface IUnitOfWork : IDisposable
     {
-        IRepository<Ingredient> IngredientRepo { get; }
+        IIngredientRepository IngredientRepo { get; }
+        IFoodRepository FoodRepo { get; }
 
         Task CommitAsync();
     }

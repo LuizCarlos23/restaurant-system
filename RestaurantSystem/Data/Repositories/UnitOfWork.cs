@@ -1,4 +1,6 @@
 ﻿using RestaurantSystem.Data.Context;
+using RestaurantSystem.Data.Repositories.Food;
+using RestaurantSystem.Data.Repositories.Ingredient;
 using RestaurantSystem.Models;
 
 namespace RestaurantSystem.Data.Repositories
@@ -6,16 +8,18 @@ namespace RestaurantSystem.Data.Repositories
     public class UnitOfWork : IUnitOfWork
     {
         private ApplicationDbContext _context;
-        public IRepository<Ingredient>? _ingredientRepo;
+        public IIngredientRepository? _ingredientRepo;
+        public IFoodRepository? _foodRepo;
 
         public UnitOfWork(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        public IRepository<Ingredient> IngredientRepo => _ingredientRepo ??= new Repository<Ingredient>(_context);
+        public IIngredientRepository IngredientRepo => _ingredientRepo ??= new IngredientRepository(_context);
+        public IFoodRepository FoodRepo => _foodRepo ??= new FoodRepository(_context);
 
-        public Task CommitAsync() => _context.SaveChangesAsync();
+        public async Task CommitAsync() => await _context.SaveChangesAsync();
         public void Dispose() => _context.Dispose();
     }
 }

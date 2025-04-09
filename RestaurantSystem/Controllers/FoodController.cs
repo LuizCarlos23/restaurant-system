@@ -12,6 +12,7 @@ using RestaurantSystem.Data.Context;
 using RestaurantSystem.Data.Repositories;
 using RestaurantSystem.DTOs;
 using RestaurantSystem.Models;
+using RestaurantSystem.Services.Interfaces;
 
 namespace RestaurantSystem.Controllers
 {
@@ -19,10 +20,12 @@ namespace RestaurantSystem.Controllers
     public class FoodController : Controller
     {
         public readonly IUnitOfWork _uow;
+        public readonly IFoodService _foodService;
 
-        public FoodController(IUnitOfWork uow, ApplicationDbContext context)
+        public FoodController(IUnitOfWork uow, IFoodService foodServices)
         {
             _uow = uow;
+            _foodService = foodServices;
         }
 
         public async Task<IActionResult> Index()
@@ -46,31 +49,7 @@ namespace RestaurantSystem.Controllers
             if (!ModelState.IsValid)
                 return View(food);
 
-            var entity = new Food()
-            {
-                Name = food.Name,
-                Description = food.Description,
-                BasePrice = food.BasePrice
-            };
-
-            if (food.Image is not null)
-            {
-                using (var stream = new MemoryStream())
-                {
-                    await food.Image.CopyToAsync(stream);
-                    entity.Image = stream.ToArray();
-                    entity.ImageMimeType = food.Image.ContentType;
-                    entity.ImageFileName = food.Image.FileName;
-                }
-            }
-
-
-            if (food.OptionalIngredients is not null)
-            {
-                var optionalIngredients = await _uow.IngredientRepo.GetAllByListId(food.OptionalIngredients).ToListAsync();
-                entity.OptionalIngredients = optionalIngredients;
-            }
-
+            var entity = await _foodService.CreateFoodFromDtoAsync(food);
 
             await _uow.FoodRepo.AddAsync(entity);
             await _uow.CommitAsync();
@@ -133,28 +112,7 @@ namespace RestaurantSystem.Controllers
             if (entity is null)
                 return NotFound();
 
-            entity.Name = food.Name;
-            entity.Description = food.Description;
-            entity.BasePrice = food.BasePrice;
-
-            if (food.Image is not null)
-            {
-                using (var stream = new MemoryStream())
-                {
-                    await food.Image.CopyToAsync(stream);
-                    entity.Image = stream.ToArray();
-                    entity.ImageMimeType = food.Image.ContentType;
-                    entity.ImageFileName = food.Image.FileName;
-                }
-            }
-
-
-            if (food.OptionalIngredients is not null)
-            {
-                var ingredients = await _uow.IngredientRepo.GetAllByListId(food.OptionalIngredients).ToListAsync();
-                entity.OptionalIngredients?.Clear();
-                entity.OptionalIngredients.AddRange(ingredients);
-            }
+            entity = await _foodService.EditFoodFromDtoAsync(entity, food);
 
             _uow.FoodRepo.Update(entity);
             await _uow.CommitAsync();
@@ -171,9 +129,7 @@ namespace RestaurantSystem.Controllers
             if (food is null)
                 return NotFound();
 
-            food.Image = null;
-            food.ImageFileName = null;
-            food.ImageMimeType = null;
+            food = _foodService.RemoveImage(food);
 
             await _uow.CommitAsync();
 

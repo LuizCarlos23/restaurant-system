@@ -1,9 +1,10 @@
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using RestaurantSystem.Data.Context;
 using RestaurantSystem.Data.Repositories;
 using RestaurantSystem.Models;
+using RestaurantSystem.Services;
+using RestaurantSystem.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,8 +14,12 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<ApplicationDbContext>(options => 
     options.UseSqlServer(builder.Configuration.GetConnectionString("LocalConnection")));
 
+//DI para Repositories
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+
+//DI para Services 
+builder.Services.AddScoped<IFoodService, FoodService>();
 
 // Configuração do Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()

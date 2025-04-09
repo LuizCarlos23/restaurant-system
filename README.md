@@ -1,4 +1,4 @@
-# 🍽️ Restaurante MVC
+# 🍽️ Sistema de Restaurante
 
 Este é um sistema de restaurante desenvolvido em **ASP.NET Core MVC**. O sistema permite que os usuários realizem pedidos personalizados, adicionando ingredientes opcionais aos alimentos, visualizem o status de seus pedidos e muito mais.
 

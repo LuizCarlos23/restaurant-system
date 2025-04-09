@@ -1,29 +1,23 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RestaurantSystem.Data.Context;
+using RestaurantSystem.Data.Repositories;
 using RestaurantSystem.Models;
 
 namespace RestaurantSystem.Controllers
 {
     public class CatalogController : Controller
     {
-        public ApplicationDbContext _context;
+        public IUnitOfWork _uow;
 
-        public CatalogController(ApplicationDbContext context)
+        public CatalogController(IUnitOfWork uow)
         {
-            _context = context;
+            _uow = uow;
         }
 
         public async Task<IActionResult> Index()
         {
-            var catalog = await _context.Foods.Select(f => 
-                new CatalogViewModel() { 
-                    FoodId = f.Id,
-                    FoodName = f.Name, 
-                    FoodDescription = f.Description, 
-                    FoodPrice = f.BasePrice
-                }).ToListAsync();
-            
+            var catalog = await _uow.FoodRepo.GetCatalogAsync();
             return View(catalog);
         }
     }

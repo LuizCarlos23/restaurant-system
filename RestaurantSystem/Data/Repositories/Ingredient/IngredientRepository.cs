@@ -19,9 +19,9 @@ namespace RestaurantSystem.Data.Repositories.Ingredient
             }).ToListAsync();
         }
 
-        public async Task<ICollection<Models.Ingredient>> GetIngredientsByListIdAsync(IEnumerable<long> ids)
+        public IQueryable<Models.Ingredient> GetAllByListId(IEnumerable<long> ids)
         {
-            return await _dbSet.Where(i => ids.Contains(i.Id)).ToListAsync();
+            return _dbSet.Where(i => ids.Contains(i.Id));
         }
     }
 }

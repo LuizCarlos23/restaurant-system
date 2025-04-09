@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Logging;
 using Newtonsoft.Json;
 using RestaurantSystem.Data.Context;
+using RestaurantSystem.Data.Repositories;
 using RestaurantSystem.DTOs;
 using RestaurantSystem.Enums;
 using RestaurantSystem.Models;
@@ -17,13 +18,13 @@ namespace RestaurantSystem.Controllers
     [Authorize]
     public class OrderController : Controller
     {
-        public readonly ApplicationDbContext _context;
+        public readonly IUnitOfWork _uow;
         public readonly UserManager<ApplicationUser> _userManager;
 
-        public OrderController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public OrderController(IUnitOfWork uow, UserManager<ApplicationUser> userManager)
         {
-            _context = context;
             _userManager = userManager;
+            _uow = uow;
         }
 
         [HttpPost]
@@ -32,15 +33,14 @@ namespace RestaurantSystem.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(Json(new { Errors = ModelState.Values.SelectMany(v => v.Errors) }));
 
-            var food = await _context.Foods.SingleOrDefaultAsync(f => f.Id == item.FoodID);
+            var food = await _uow.FoodRepo.GetByIdAsync(item.FoodID);
             var ingredients = new List<IngredientDTO>();
             decimal sumIngredientsPrices = 0;
 
             if (item.SelectedOptionalIngredients is not null)
             {
-                ingredients = await _context.Ingredients
-                    .Where(i => item.SelectedOptionalIngredients.Contains(i.Id))
-                    .Select(i => new IngredientDTO { Id = i.Id, Name = i.Name, Price = i.Price})
+                ingredients = await _uow.IngredientRepo.GetAllByListId(item.SelectedOptionalIngredients)
+                    .Select(i => new IngredientDTO { Id = i.Id, Name = i.Name, Price = i.Price })
                     .ToListAsync();
                 sumIngredientsPrices = ingredients.Sum(i => i.Price);
             }
@@ -80,7 +80,7 @@ namespace RestaurantSystem.Controllers
         {
             string? orderSession = HttpContext.Session.GetString("Order");
             if (orderSession is null)
-                return Json(new {});
+                return Json(new { });
 
             var order = JsonConvert.DeserializeObject<OrderSessionDTO>(orderSession);
 
@@ -97,25 +97,21 @@ namespace RestaurantSystem.Controllers
             if (order is null)
                 return BadRequest();
 
-            var orderEntity = new Order ()
+            var orderEntity = new Order()
             {
                 OrderedItems = new Collection<OrderItem>()
             };
 
             foreach (var item in order.OrderItems)
             {
-                var food = await _context.Foods.SingleAsync(f => f.Id == item.Food.Id);
+                var food = await _uow.FoodRepo.GetByIdAsync(item.Food.Id);
                 decimal sumIngredientsPrices = 0;
 
                 List<Ingredient>? ingredients = null;
                 if (item.OptionalIngredientsSelected is not null)
                 {
-                    ingredients = _context.Ingredients
-                        .Where(i => 
-                            item.OptionalIngredientsSelected
-                                .Select(i => i.Id)
-                                .Contains(i.Id))
-                        .ToList();
+                    IEnumerable<long> ingredientIds = item.OptionalIngredientsSelected?.Select(i => (long)i.Id) ?? [];
+                    ingredients = _uow.IngredientRepo.GetAllByListId(ingredientIds).ToList();
 
                     sumIngredientsPrices += ingredients.Sum(i => i.Price);
 
@@ -127,12 +123,12 @@ namespace RestaurantSystem.Controllers
                     Food = food,
                     OptionalIngredientsSelected = ingredients,
                     Quantity = item.Quantity,
-                    TotalPrice = ( food.BasePrice + sumIngredientsPrices) * item.Quantity
+                    TotalPrice = (food.BasePrice + sumIngredientsPrices) * item.Quantity
                 };
 
                 orderEntity.OrderedItems.Add(orderItemEntity);
             }
-            
+
             orderEntity.TotalPrice = orderEntity.OrderedItems.Sum(i => i.TotalPrice);
             var user = await _userManager.GetUserAsync(User);
             if (user is null)
@@ -142,14 +138,12 @@ namespace RestaurantSystem.Controllers
             orderEntity.OrderDate = DateTime.UtcNow;
             orderEntity.Status = Status.Pending;
 
-            _context.Orders.Add(orderEntity);
-            await _context.SaveChangesAsync();
+            await _uow.OrderRepo.AddAsync(orderEntity);
+            await _uow.CommitAsync();
 
             HttpContext.Session.SetString("Order", "null");
 
-
             return Ok();
         }
-
     }
 }

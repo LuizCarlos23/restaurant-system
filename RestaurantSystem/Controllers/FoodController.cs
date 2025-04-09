@@ -67,7 +67,7 @@ namespace RestaurantSystem.Controllers
 
             if (food.OptionalIngredients is not null)
             {
-                var optionalIngredients = await _uow.IngredientRepo.GetIngredientsByListIdAsync(food.OptionalIngredients);
+                var optionalIngredients = await _uow.IngredientRepo.GetAllByListId(food.OptionalIngredients).ToListAsync();
                 entity.OptionalIngredients = optionalIngredients;
             }
 
@@ -151,7 +151,7 @@ namespace RestaurantSystem.Controllers
 
             if (food.OptionalIngredients is not null)
             {
-                var ingredients = await _uow.IngredientRepo.GetIngredientsByListIdAsync(food.OptionalIngredients);
+                var ingredients = await _uow.IngredientRepo.GetAllByListId(food.OptionalIngredients).ToListAsync();
                 entity.OptionalIngredients?.Clear();
                 entity.OptionalIngredients.AddRange(ingredients);
             }

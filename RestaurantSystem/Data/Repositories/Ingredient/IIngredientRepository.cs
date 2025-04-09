@@ -4,7 +4,7 @@ namespace RestaurantSystem.Data.Repositories.Ingredient
 {
     public interface IIngredientRepository : IRepository<Models.Ingredient>
     {
-        Task<ICollection<Models.Ingredient>> GetIngredientsByListIdAsync(IEnumerable<long> ids);
+        IQueryable<Models.Ingredient> GetAllByListId(IEnumerable<long> ids);
         Task<IEnumerable<IngredientSelectApresentationDTO>> GetAllForSelectAsync();
     }
 }

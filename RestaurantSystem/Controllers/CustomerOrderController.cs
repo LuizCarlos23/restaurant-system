@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RestaurantSystem.Data.Context;
+using RestaurantSystem.Data.Repositories;
 using RestaurantSystem.DTOs;
 using RestaurantSystem.Models;
 
@@ -11,21 +12,20 @@ namespace RestaurantSystem.Controllers
     [Authorize]
     public class CustomerOrderController : Controller
     {
-        public readonly ApplicationDbContext _context;
+        public readonly IUnitOfWork _uow;
         public readonly UserManager<ApplicationUser> _userManager;
 
-        public CustomerOrderController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public CustomerOrderController(IUnitOfWork uow, UserManager<ApplicationUser> userManager)
         {
-            _context = context;
             _userManager = userManager;
+            _uow = uow;
         }
 
         public async Task<IActionResult> Index()
         {
             var user = await _userManager.GetUserAsync(User);
 
-            var orders = _context.Orders
-                .Include(o => o.OrderedItems)
+            var orders = _uow.OrderRepo.GetAllWithItems()
                 .Where(o => o.User.Id == user.Id)
                 .Select(o => new CustomerOrderDto() { 
                         Id = o.Id, 

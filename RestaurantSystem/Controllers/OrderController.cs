@@ -1,17 +1,11 @@
-﻿using System.Collections.ObjectModel;
-using System.Numerics;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Logging;
 using Newtonsoft.Json;
-using RestaurantSystem.Data.Context;
 using RestaurantSystem.Data.Repositories;
 using RestaurantSystem.DTOs;
-using RestaurantSystem.Enums;
 using RestaurantSystem.Models;
+using RestaurantSystem.Services.Interfaces;
 
 namespace RestaurantSystem.Controllers
 {
@@ -20,123 +14,81 @@ namespace RestaurantSystem.Controllers
     {
         public readonly IUnitOfWork _uow;
         public readonly UserManager<ApplicationUser> _userManager;
+        public readonly IOrderService _orderService;
+        private const string OrderSessionKey = "Order";
 
-        public OrderController(IUnitOfWork uow, UserManager<ApplicationUser> userManager)
+        public OrderController(IUnitOfWork uow, UserManager<ApplicationUser> userManager, IOrderService orderService)
         {
             _userManager = userManager;
             _uow = uow;
+            _orderService = orderService;
+        }
+
+        private void SetOrderInSession(OrderSessionDTO order)
+        {
+            HttpContext.Session.SetString(OrderSessionKey, 
+                JsonConvert.SerializeObject(order, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore }));
+        }
+
+        private OrderSessionDTO? GetOrderFromSession()
+        {
+            string? orderSession = HttpContext.Session.GetString(OrderSessionKey);
+
+            if (orderSession is null || orderSession == "null")
+                return null;
+
+            try
+            {
+                return JsonConvert.DeserializeObject<OrderSessionDTO>(orderSession);
+            } catch (JsonException)
+            {
+                return null;
+            }
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddOrderItem(OrderItemRegisterDTO item)
+        public async Task<IActionResult> AddOrderItem(OrderItemSessionDTO item)
         {
             if (!ModelState.IsValid)
                 return BadRequest(Json(new { Errors = ModelState.Values.SelectMany(v => v.Errors) }));
 
-            var food = await _uow.FoodRepo.GetByIdAsync(item.FoodID);
-            var ingredients = new List<IngredientDTO>();
-            decimal sumIngredientsPrices = 0;
-
-            if (item.SelectedOptionalIngredients is not null)
-            {
-                ingredients = await _uow.IngredientRepo.GetAllByListId(item.SelectedOptionalIngredients)
-                    .Select(i => new IngredientDTO { Id = i.Id, Name = i.Name, Price = i.Price })
-                    .ToListAsync();
-                sumIngredientsPrices = ingredients.Sum(i => i.Price);
-            }
+            var food = await _uow.FoodRepo.GetByIdAsync(item.FoodId);
 
             if (food is null)
                 return BadRequest(Json(new { Errors = new List<string>() { "Comida não encontrada!" } }));
 
-            var orderItemSessionDTO = new OrderItemSessionDTO()
-            {
-                Food = food,
-                Quantity = item.Quantity,
-                OptionalIngredientsSelected = ingredients,
-                TotalPrice = (food.BasePrice + sumIngredientsPrices) * item.Quantity
-            };
+            OrderSessionDTO? orderSessionConverted = GetOrderFromSession();
 
-            var order = new OrderSessionDTO()
-            {
-                OrderItems = new Collection<OrderItemSessionDTO>()
-            };
+            var order = _orderService.AddOrderItemToOrderSessionDto(item, orderSessionConverted);
 
-            string? orderSession = HttpContext.Session.GetString("Order");
-
-            if (orderSession is not null && orderSession != "null")
-            {
-                order = JsonConvert.DeserializeObject<OrderSessionDTO>(orderSession);
-            }
-
-            order.OrderItems.Add(orderItemSessionDTO);
-            order.TotalPrice = order.OrderItems.Sum(i => i.TotalPrice);
-
-            HttpContext.Session.SetString("Order", JsonConvert.SerializeObject(order, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore }));
+            SetOrderInSession(order);
 
             return Ok();
         }
 
-        public IActionResult GetOrder()
+        public async Task<IActionResult> GetOrder()
         {
-            string? orderSession = HttpContext.Session.GetString("Order");
-            if (orderSession is null)
-                return Json(new { });
+            var orderSession = GetOrderFromSession();
 
-            var order = JsonConvert.DeserializeObject<OrderSessionDTO>(orderSession);
+            if (orderSession is null)
+                return NotFound();
+
+            var order = await _orderService.CreateOrderDtoFromOrderSessionDto(orderSession);
 
             return Json(order);
         }
 
         public async Task<IActionResult> Buy()
         {
-            string? orderSession = HttpContext.Session.GetString("Order");
-            if (orderSession is null)
-                return BadRequest();
-
-            var order = JsonConvert.DeserializeObject<OrderSessionDTO>(orderSession);
+            var order = GetOrderFromSession();
             if (order is null)
                 return BadRequest();
 
-            var orderEntity = new Order()
-            {
-                OrderedItems = new Collection<OrderItem>()
-            };
-
-            foreach (var item in order.OrderItems)
-            {
-                var food = await _uow.FoodRepo.GetByIdAsync(item.Food.Id);
-                decimal sumIngredientsPrices = 0;
-
-                List<Ingredient>? ingredients = null;
-                if (item.OptionalIngredientsSelected is not null)
-                {
-                    IEnumerable<long> ingredientIds = item.OptionalIngredientsSelected?.Select(i => (long)i.Id) ?? [];
-                    ingredients = _uow.IngredientRepo.GetAllByListId(ingredientIds).ToList();
-
-                    sumIngredientsPrices += ingredients.Sum(i => i.Price);
-
-                }
-
-
-                var orderItemEntity = new OrderItem()
-                {
-                    Food = food,
-                    OptionalIngredientsSelected = ingredients,
-                    Quantity = item.Quantity,
-                    TotalPrice = (food.BasePrice + sumIngredientsPrices) * item.Quantity
-                };
-
-                orderEntity.OrderedItems.Add(orderItemEntity);
-            }
-
-            orderEntity.TotalPrice = orderEntity.OrderedItems.Sum(i => i.TotalPrice);
             var user = await _userManager.GetUserAsync(User);
             if (user is null)
                 return NotFound();
 
-            orderEntity.User = user;
-            orderEntity.OrderDate = DateTime.UtcNow;
-            orderEntity.Status = Status.Pending;
+            var orderEntity = await _orderService.CreateOrderFromOrderSessionDto(order, user);
 
             await _uow.OrderRepo.AddAsync(orderEntity);
             await _uow.CommitAsync();

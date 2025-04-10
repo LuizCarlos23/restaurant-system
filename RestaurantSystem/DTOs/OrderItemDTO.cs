@@ -4,16 +4,18 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace RestaurantSystem.DTOs
 {
-    public class OrderItemRegisterDTO
+    public class OrderItemDTO
     {
         [Required]
-        public long FoodID { get; set; }
+        public Food Food { get; set; }
 
+        [AllowNull]
+        public ICollection<Ingredient>? OptionalIngredientsSelected { get; set; }
 
         [Required]
         public int Quantity { get; set; }
 
-        [AllowNull]
-        public long[]? SelectedOptionalIngredients { get; set; }
+        [Required]
+        public decimal TotalPrice { get; set; }
     }
 }

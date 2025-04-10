@@ -37,7 +37,7 @@
  	</div>
 	<div class="offcanvas-body">
 		<div id="order">
-			<div id="orderItems">
+			<div id="orderedItems">
 				
 			</div>
 
@@ -227,7 +227,7 @@
 			let body = { 
 				FoodID: currentFoodToAdd.foodId, 
 				quantity: currentFoodToAdd.quantity,
-				selectedOptionalIngredients: currentFoodToAdd.selectedOptionalIngredients 
+				OptionalIngredientsSelectedIds: currentFoodToAdd.selectedOptionalIngredients
 			}
 
 			$.ajax({
@@ -248,7 +248,7 @@
 		}
 
 		function getOrder() {
-			$("#orderItems").html("");
+			$("#orderedItems").html("");
 
 			$.ajax({
 				url: "@Url.Action("GetOrder", "Order")",
@@ -257,7 +257,7 @@
 				success: function(response) {
 					console.log(response)
 
-					response?.orderItems?.map(item => {
+					response?.orderedItems?.map(item => {
 						let newElement = `
 							<div class="orderItem d-flex justify-content-around flex-row">
 								<div>${item.food.name}</div>
@@ -266,7 +266,7 @@
 							</div>
 						`
 
-						$("#orderItems").append(newElement);
+						$("#orderedItems").append(newElement);
 					})
 
 					$("#cartTotalPrice").text( Number(response?.totalPrice).toFixed(2) )

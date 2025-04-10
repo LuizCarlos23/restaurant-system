@@ -8,15 +8,12 @@ namespace RestaurantSystem.DTOs
     {
 
         [Required]
-        public Food Food { get; set; }
+        public long FoodId { get; set; }
 
         [AllowNull]
-        public ICollection<IngredientDTO>? OptionalIngredientsSelected { get; set; }
+        public IEnumerable<long>? OptionalIngredientsSelectedIds { get; set; }
 
         [Required]
         public int Quantity { get; set; }
-
-        [Required]
-        public decimal TotalPrice { get; set; }
     }
 }

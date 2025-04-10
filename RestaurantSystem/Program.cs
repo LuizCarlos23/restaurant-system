@@ -20,6 +20,7 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
 //DI para Services 
 builder.Services.AddScoped<IFoodService, FoodService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 
 // Configuração do Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()

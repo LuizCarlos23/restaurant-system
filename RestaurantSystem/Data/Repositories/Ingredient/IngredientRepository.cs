@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using NuGet.Packaging.Signing;
 using RestaurantSystem.Data.Context;
 using RestaurantSystem.DTOs;
 
@@ -22,6 +23,13 @@ namespace RestaurantSystem.Data.Repositories.Ingredient
         public IQueryable<Models.Ingredient> GetAllByListId(IEnumerable<long> ids)
         {
             return _dbSet.Where(i => ids.Contains(i.Id));
+        }
+
+        public IQueryable<Models.Ingredient> GetAllByFoodId(long foodId)
+        {
+            return _dbSet
+                .Where(i => i.Foods.Any(f => f.Id == foodId)
+            );
         }
     }
 }

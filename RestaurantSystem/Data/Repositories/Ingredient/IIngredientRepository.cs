@@ -6,5 +6,6 @@ namespace RestaurantSystem.Data.Repositories.Ingredient
     {
         IQueryable<Models.Ingredient> GetAllByListId(IEnumerable<long> ids);
         Task<IEnumerable<IngredientSelectApresentationDTO>> GetAllForSelectAsync();
+        IQueryable<Models.Ingredient> GetAllByFoodId(long foodId);
     }
 }

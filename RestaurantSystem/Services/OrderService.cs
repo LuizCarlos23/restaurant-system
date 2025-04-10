@@ -17,14 +17,24 @@ namespace RestaurantSystem.Services
             _uow = uow;
         }
 
-        public async Task<OrderItemDTO> CreateOrderItemDto(OrderItemSessionDTO item, Food food)
+        public OrderItemDTO CreateOrderItemDto(OrderItemSessionDTO item, Food food)
         {
             var ingredients = new List<Ingredient>();
             decimal sumIngredientsPrices = 0;
 
+
             if (item.OptionalIngredientsSelectedIds is not null)
             {
-                ingredients = await _uow.IngredientRepo.GetAllByListId(item.OptionalIngredientsSelectedIds).ToListAsync();
+                var foodIngredients = _uow.IngredientRepo.GetAllByFoodId(food.Id);
+
+                if (foodIngredients is null)
+                    throw new InvalidOperationException("Ingredientes inválidos foram selecionados para essa comida.");
+
+                ingredients = foodIngredients
+                    .Where(i => item.OptionalIngredientsSelectedIds.Contains(i.Id))
+                    .ToList();
+
+
                 sumIngredientsPrices = ingredients.Sum(i => i.Price);
             }
 
@@ -68,17 +78,9 @@ namespace RestaurantSystem.Services
                 if (food is null)
                     throw new Exception("Comida não encontrada");
 
-                var orderItemDto = await CreateOrderItemDto(item, food);
+                var orderItemDto = CreateOrderItemDto(item, food);
 
-                var orderItemEntity = new OrderItemDTO()
-                {
-                    Food = food,
-                    OptionalIngredientsSelected = orderItemDto.OptionalIngredientsSelected,
-                    Quantity = item.Quantity,
-                    TotalPrice = orderItemDto.TotalPrice
-                };
-
-                order.OrderedItems.Add(orderItemEntity);
+                order.OrderedItems.Add(orderItemDto);
             }
 
             order.TotalPrice = order.OrderedItems.Sum(i => i.TotalPrice);
@@ -89,21 +91,22 @@ namespace RestaurantSystem.Services
         {
             var orderDto = await CreateOrderDtoFromOrderSessionDto(orderSessionDto);
 
-            var order = new Order() { OrderedItems = new Collection<OrderItem>() };
-
-            order.OrderedItems = orderDto.OrderedItems.Select(dto => new OrderItem()
+            var order = new Order
             {
-                Food = dto.Food,
-                OptionalIngredientsSelected = dto.OptionalIngredientsSelected,
-                Quantity = dto.Quantity,
-                TotalPrice = dto.TotalPrice
-                
-            }).ToList();
+                OrderedItems = orderDto.OrderedItems.Select(dto => new OrderItem()
+                {
+                    Food = dto.Food,
+                    OptionalIngredientsSelected = dto.OptionalIngredientsSelected,
+                    Quantity = dto.Quantity,
+                    TotalPrice = dto.TotalPrice
 
-            order.User = user;
-            order.OrderDate = DateTime.UtcNow;
-            order.Status = Status.Pending;
-            order.TotalPrice = orderDto.TotalPrice;
+                }).ToList(),
+
+                User = user,
+                OrderDate = DateTime.UtcNow,
+                Status = Status.Pending,
+                TotalPrice = orderDto.TotalPrice
+            };
 
             return order;
         }

@@ -24,6 +24,8 @@ namespace RestaurantSystem.Controllers
             _orderService = orderService;
         }
 
+        private void ClearOrderSession() => HttpContext.Session.SetString(OrderSessionKey, "null");
+
         private void SetOrderInSession(OrderSessionDTO order)
         {
             HttpContext.Session.SetString(OrderSessionKey, 
@@ -72,10 +74,15 @@ namespace RestaurantSystem.Controllers
 
             if (orderSession is null)
                 return NotFound();
+            try
+            {
+                var order = await _orderService.CreateOrderDtoFromOrderSessionDto(orderSession);
+                return Json(order);
+            } catch (Exception err)
+            {
+                return BadRequest(err.Message);
+            }
 
-            var order = await _orderService.CreateOrderDtoFromOrderSessionDto(orderSession);
-
-            return Json(order);
         }
 
         public async Task<IActionResult> Buy()
@@ -88,12 +95,21 @@ namespace RestaurantSystem.Controllers
             if (user is null)
                 return NotFound();
 
-            var orderEntity = await _orderService.CreateOrderFromOrderSessionDto(order, user);
+            Order orderEntity;
+            try
+            {
+                orderEntity = await _orderService.CreateOrderFromOrderSessionDto(order, user);
+            }
+            catch (Exception err)
+            {
+                return BadRequest(err.Message);
+            }
+
 
             await _uow.OrderRepo.AddAsync(orderEntity);
             await _uow.CommitAsync();
 
-            HttpContext.Session.SetString("Order", "null");
+            ClearOrderSession();
 
             return Ok();
         }

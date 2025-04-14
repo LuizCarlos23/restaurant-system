@@ -29,5 +29,8 @@ namespace RestaurantSystem.DTOs
 
         [AllowNull]
         public ICollection<long>? OptionalIngredients { get; set; }
+
+        [AllowNull]
+        public ICollection<long>? ExclusiveIngredients { get; set; }
     }
 }

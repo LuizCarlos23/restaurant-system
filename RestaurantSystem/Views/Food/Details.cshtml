@@ -4,15 +4,10 @@
     ViewData["Title"] = "Details";
 }
 
-<h1>Details</h1>
-
 <div>
-    <div class="row">
-        <div class="col">
-            <h4 class="text-center">Food</h4>
-        </div>
-        <div class="col">
-            <h4 class="text-center">Ingredientes Opcionais</h4>
+    <div class="d-flex justify-content-center">
+        <div>
+            <h4 class="text-center">Comida</h4>
         </div>
     </div>
     
@@ -44,6 +39,8 @@
         </div>
 
         <div class="col">
+            <h4 class="text-center">Ingredientes Opcionais</h4>
+
             <table class="table ">
                 <thead>
                     <tr>
@@ -60,6 +57,41 @@
                     @if (Model.OptionalIngredients is not null)
                     {
                         @foreach (var item in Model.OptionalIngredients)
+                        {
+                            <tr id="ingredient_@item.Id">
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.Name)
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.Price)
+                                </td>
+                                <td>
+                                    <button onclick="removeIngredientFromFoodHandle(@Model.Id, @item.Id)">Remover</button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+
+            <h4 class="text-center">Ingredientes Exclusivos</h4>
+
+            <table class="table ">
+                <thead>
+                    <tr>
+                        <th>
+                            Nome
+                        </th>
+                        <th>
+                            Preço
+                        </th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.ExclusiveIngredients is not null)
+                    {
+                        @foreach (var item in Model.ExclusiveIngredients)
                         {
                             <tr id="ingredient_@item.Id">
                                 <td>

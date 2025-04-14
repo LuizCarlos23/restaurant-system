@@ -25,7 +25,7 @@ namespace RestaurantSystem.Services
 
             if (item.OptionalIngredientsSelectedIds is not null)
             {
-                var foodIngredients = _uow.IngredientRepo.GetAllByFoodId(food.Id);
+                var foodIngredients = _uow.IngredientRepo.GetOptionalForFoodId(food.Id);
 
                 if (foodIngredients is null)
                     throw new InvalidOperationException("Ingredientes inválidos foram selecionados para essa comida.");

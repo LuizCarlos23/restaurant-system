@@ -25,10 +25,10 @@ namespace RestaurantSystem.Data.Repositories.Ingredient
             return _dbSet.Where(i => ids.Contains(i.Id));
         }
 
-        public IQueryable<Models.Ingredient> GetAllByFoodId(long foodId)
+        public IQueryable<Models.Ingredient> GetOptionalForFoodId(long foodId)
         {
             return _dbSet
-                .Where(i => i.Foods.Any(f => f.Id == foodId)
+                .Where(i => i.OptionalForFoods.Any(f => f.Id == foodId)
             );
         }
     }

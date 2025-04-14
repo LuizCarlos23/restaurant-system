@@ -39,6 +39,7 @@ namespace RestaurantSystem.Controllers
             var ingredients = await _uow.IngredientRepo.GetAllForSelectAsync();
 
             ViewBag.OptionalIngredients = new MultiSelectList(ingredients, "Id", "Description");
+            ViewBag.ExclusiveIngredients = new MultiSelectList(ingredients, "Id", "Description");
             return View();
         }
 
@@ -76,15 +77,22 @@ namespace RestaurantSystem.Controllers
             if (food is null)
                 return NotFound();
 
-            List<long> selectedIngredients = [];
+            List<long> selectedOptinalIngredients = [];
             if (food.OptionalIngredients is not null)
             {
-                selectedIngredients = food.OptionalIngredients.Select(i => i.Id).ToList();
+                selectedOptinalIngredients = food.OptionalIngredients.Select(i => i.Id).ToList();
+            }
+
+            List<long> selectedExclusiveIngredients = [];
+            if (food.ExclusiveIngredients is not null)
+            {
+                selectedExclusiveIngredients = food.ExclusiveIngredients.Select(i => i.Id).ToList();
             }
 
             var ingredients = await _uow.IngredientRepo.GetAllForSelectAsync();
 
-            ViewBag.OptionalIngredients = new MultiSelectList(ingredients, "Id", "Description", selectedIngredients);
+            ViewBag.OptionalIngredients = new MultiSelectList(ingredients, "Id", "Description", selectedOptinalIngredients);
+            ViewBag.ExclusiveIngredients = new MultiSelectList(ingredients, "Id", "Description", selectedExclusiveIngredients);
 
             var dto = new FoodDTO()
             {
@@ -139,7 +147,7 @@ namespace RestaurantSystem.Controllers
         [HttpPost]
         public async Task<IActionResult> Delete(long id)
         {
-            var food = await _uow.FoodRepo.GetByIdWithIngredientsAsync(id);
+            var food = await _uow.FoodRepo.GetByIdAsync(id);
 
             if (food is null)
                 return NotFound();

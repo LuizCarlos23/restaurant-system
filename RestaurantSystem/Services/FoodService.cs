@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis.Diagnostics;
+﻿using System.Runtime.InteropServices;
+using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using NuGet.Packaging;
 using RestaurantSystem.Data.Repositories;
@@ -58,6 +59,12 @@ namespace RestaurantSystem.Services
                 entity.OptionalIngredients = optionalIngredients;
             }
 
+            if (dto.ExclusiveIngredients is not null)
+            {
+                var exclusiveIngredients = await _uow.IngredientRepo.GetAllByListId(dto.ExclusiveIngredients).ToListAsync();
+                entity.ExclusiveIngredients = exclusiveIngredients;
+            }
+
             return entity;
         }
 
@@ -78,6 +85,13 @@ namespace RestaurantSystem.Services
                 var ingredients = await _uow.IngredientRepo.GetAllByListId(dto.OptionalIngredients).ToListAsync();
                 entity.OptionalIngredients?.Clear();
                 entity.OptionalIngredients.AddRange(ingredients);
+            }
+
+            if (dto.ExclusiveIngredients is not null)
+            {
+                var ingredients = await _uow.IngredientRepo.GetAllByListId(dto.ExclusiveIngredients).ToListAsync();
+                entity.ExclusiveIngredients?.Clear();
+                entity.ExclusiveIngredients.AddRange(ingredients);
             }
 
             return entity;

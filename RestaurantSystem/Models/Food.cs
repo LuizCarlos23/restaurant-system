@@ -30,5 +30,8 @@ namespace RestaurantSystem.Models
 
         [AllowNull]
         public ICollection<Ingredient>? OptionalIngredients { get; set; }
+
+        [AllowNull]
+        public ICollection<Ingredient>? ExclusiveIngredients { get; set; }
     }
 }

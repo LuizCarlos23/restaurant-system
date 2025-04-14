@@ -12,7 +12,7 @@ namespace RestaurantSystem.Data.Repositories.Food
 
         public async Task<Models.Food?> GetByIdWithIngredientsAsync(long id)
         {
-            return await _dbSet.Include(f => f.OptionalIngredients).SingleOrDefaultAsync(f => f.Id == id);
+            return await _dbSet.Include(f => f.OptionalIngredients).Include(f => f.ExclusiveIngredients).SingleOrDefaultAsync(f => f.Id == id);
         }
 
         public async Task<IEnumerable<CatalogViewModel>> GetCatalogAsync()

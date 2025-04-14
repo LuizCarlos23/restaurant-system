@@ -18,6 +18,7 @@ namespace RestaurantSystem.Models
         public decimal Price { get; set; }
 
         [AllowNull]
-        public virtual ICollection<Food>? Foods { get; set; }
+        public virtual ICollection<Food>? OptionalForFoods { get; set; }
+        public virtual ICollection<Food>? ExclusiveForFoods { get; set; }
     }
 }

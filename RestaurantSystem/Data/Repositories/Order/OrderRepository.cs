@@ -10,9 +10,23 @@ namespace RestaurantSystem.Data.Repositories.Order
         {
         }
 
-        public IQueryable<Models.Order> GetAllWithItems()
+        public IQueryable<Models.Order> GetAllByUserId(string userId)
         {
-            return _dbSet.Include(o => o.OrderedItems);
+            return _dbSet.Where(o => o.User.Id == userId);
         }
+
+        public IQueryable<Models.Order> GetByIdWithItems(long id, string? userId)
+        {
+            var query = (userId is not null) ? GetAllByUserId(userId) : _dbSet;
+
+            return query.Where(o => o.Id == id)
+                .Include(o => o.OrderedItems)
+                    .ThenInclude(oi => oi.Food)
+                .Include(o => o.OrderedItems)
+                    .ThenInclude(oi => oi.OptionalIngredientsSelected)
+                .Include(o => o.OrderedItems)
+                    .ThenInclude(oi => oi.ExclusiveIngredientSelected);
+        }
+
     }
 }

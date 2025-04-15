@@ -12,6 +12,9 @@ namespace RestaurantSystem.DTOs
         [AllowNull]
         public ICollection<Ingredient>? OptionalIngredientsSelected { get; set; }
 
+        [AllowNull]
+        public Ingredient? ExclusiveIngredientSelected { get; set; }
+
         [Required]
         public int Quantity { get; set; }
 

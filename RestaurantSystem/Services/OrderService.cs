@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Logging;
 using Newtonsoft.Json;
 using RestaurantSystem.Data.Repositories;
 using RestaurantSystem.DTOs;
@@ -19,7 +20,8 @@ namespace RestaurantSystem.Services
 
         public OrderItemDTO CreateOrderItemDto(OrderItemSessionDTO item, Food food)
         {
-            var ingredients = new List<Ingredient>();
+            var optionalIngredient = new List<Ingredient>();
+            Ingredient? exclusiveIngredient = null;
             decimal sumIngredientsPrices = 0;
 
 
@@ -30,19 +32,33 @@ namespace RestaurantSystem.Services
                 if (foodIngredients is null)
                     throw new InvalidOperationException("Ingredientes inválidos foram selecionados para essa comida.");
 
-                ingredients = foodIngredients
+                optionalIngredient = foodIngredients
                     .Where(i => item.OptionalIngredientsSelectedIds.Contains(i.Id))
                     .ToList();
 
 
-                sumIngredientsPrices = ingredients.Sum(i => i.Price);
+                sumIngredientsPrices = optionalIngredient.Sum(i => i.Price);
+            }
+
+            if (item.ExclusiveIngredientSelectedId is not null)
+            {
+                var foodIngredients = _uow.IngredientRepo.GetExclusiveForFoodId(food.Id);
+                if (foodIngredients is null)
+                    throw new InvalidOperationException("Ingredientes inválidos foram selecionados para essa comida.");
+
+                exclusiveIngredient = foodIngredients
+                    .Where(i => i.Id == item.ExclusiveIngredientSelectedId)
+                    .SingleOrDefault();
+
+                sumIngredientsPrices += exclusiveIngredient?.Price ?? 0;
             }
 
             return new OrderItemDTO()
             {
                 Food = food,
                 Quantity = item.Quantity,
-                OptionalIngredientsSelected = ingredients,
+                OptionalIngredientsSelected = optionalIngredient,
+                ExclusiveIngredientSelected = exclusiveIngredient,
                 TotalPrice = (food.BasePrice + sumIngredientsPrices) * item.Quantity
             };
         }
@@ -97,6 +113,7 @@ namespace RestaurantSystem.Services
                 {
                     Food = dto.Food,
                     OptionalIngredientsSelected = dto.OptionalIngredientsSelected,
+                    ExclusiveIngredientSelected = dto.ExclusiveIngredientSelected,
                     Quantity = dto.Quantity,
                     TotalPrice = dto.TotalPrice
 

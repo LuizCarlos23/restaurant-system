@@ -13,6 +13,9 @@ namespace RestaurantSystem.DTOs
         [AllowNull]
         public IEnumerable<long>? OptionalIngredientsSelectedIds { get; set; }
 
+        [AllowNull]
+        public long? ExclusiveIngredientSelectedId { get; set; }
+
         [Required]
         public int Quantity { get; set; }
     }

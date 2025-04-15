@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Runtime.InteropServices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -25,8 +26,7 @@ namespace RestaurantSystem.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
 
-            var orders = _uow.OrderRepo.GetAllWithItems()
-                .Where(o => o.User.Id == user.Id)
+            var orders = _uow.OrderRepo.GetAllByUserId(user.Id)
                 .Select(o => new CustomerOrderDto() { 
                         Id = o.Id, 
                         OrderDate = o.OrderDate.ToLocalTime(), 
@@ -37,6 +37,15 @@ namespace RestaurantSystem.Controllers
                 .ToList();
 
             return View(orders);
+        }
+
+        public async Task<IActionResult> Details(long id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            var order = await _uow.OrderRepo.GetByIdWithItems(id, user.Id).SingleOrDefaultAsync();
+
+            return View(order);
         }
     }
 }

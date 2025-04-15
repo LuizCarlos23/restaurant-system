@@ -31,5 +31,12 @@ namespace RestaurantSystem.Data.Repositories.Ingredient
                 .Where(i => i.OptionalForFoods.Any(f => f.Id == foodId)
             );
         }
+
+        public IQueryable<Models.Ingredient> GetExclusiveForFoodId(long foodId)
+        {
+            return _dbSet
+                .Where(i => i.ExclusiveForFoods.Any(f => f.Id == foodId)
+            );
+        }
     }
 }

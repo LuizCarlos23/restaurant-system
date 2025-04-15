@@ -78,7 +78,14 @@
 
 					<h5>Ingredientes Adicionais</h5>
 					<form id="formOptionalIngredients">
+						<h7>Você pode escolher 1 ou mais</h7>
+
 						<div id="modalFoodOptionalIngredients">
+						</div>
+
+						<h7>Você pode escolher apenas 1</h7>
+
+						<div id="modalFoodExclusiveIngredients">
 						</div>
 					</form>
 				</div>
@@ -114,12 +121,17 @@
 
 		$("#formOptionalIngredients").on("change", function () {
 			let checkboxElements = $("#formOptionalIngredients input:checkbox:checked");
-			let optionalIngredients = []
+			let optionalIngredients = [];
 			checkboxElements.each( (_, element) => {
-				optionalIngredients.push(Number($(element).val()))
+				optionalIngredients.push(Number($(element).val()));
 			})
-			addOptinoalIngredients(optionalIngredients)
+			addOptinoalIngredients(optionalIngredients);
 		})
+
+		$("#modalFoodExclusiveIngredients").on("change", function () {
+			let exclusiveIngredientId = getSelectedExclusiveIngredientId();
+			addExclusiveingredient(exclusiveIngredientId);
+		});
 
 		$("#modalAddItemBtn").on("click", function () {
 			console.log(currentFoodToAdd);
@@ -143,9 +155,19 @@
 			updateFoodTotalPrice();
 		}
 
+		function addExclusiveingredient(id) {
+			currentFoodToAdd.ExclusiveIngredientSelectedId = id;
+
+			updateFoodTotalPrice();
+		}
+
 		function changeFoodQuantity(quantity) {
 			currentFoodToAdd.quantity = quantity;
 			updateFoodTotalPrice();
+		}
+
+		function getSelectedExclusiveIngredientId() {
+			return Number($('input[name="exclusiveIngredients"]:checked').val()) || null;
 		}
 
 		function getSumIngredientsPrice() {
@@ -158,6 +180,11 @@
 			detailsSelectedIngredients.map(ingredient => 
 				sumIngredientsPrices += ingredient.Price 
 			);
+
+			let exclusiveIngredientId = getSelectedExclusiveIngredientId();
+			if (exclusiveIngredientId) {
+				sumIngredientsPrices += currentFood.ExclusiveIngredients["$values"].filter(item => item.Id == exclusiveIngredientId)[0].Price
+			}
 
 			return sumIngredientsPrices;
 		}
@@ -215,6 +242,29 @@
 						$("#modalFoodOptionalIngredients").append(newElement);
 					})
 
+					$("#modalFoodExclusiveIngredients").html(`
+						<div class="form-check">
+							<input class="form-check-input" type="radio" name="exclusiveIngredients" value="" id="radio_0" checked>
+							<label class="form-check-label" for="radio_0">
+								Nenhuma
+							</label>
+						</div>
+					`);
+
+					response.ExclusiveIngredients["$values"].map(ingredient => {
+						let newElement = `
+							<div class="form-check">
+								<input class="form-check-input" type="radio" name="exclusiveIngredients" value="${ingredient.Id}" id="radio_${ingredient.Id}">
+								<label class="form-check-label" for="radio_${ingredient.Id}">
+									${ingredient.Name} - R$${Number(ingredient.Price).toFixed(2)}
+								</label>
+							</div>
+						`
+
+						$("#modalFoodExclusiveIngredients").append(newElement);
+					})
+
+
 					updatePriceViewer(response.BasePrice)
 					$("#modalBuy").modal('show');
 				},
@@ -227,7 +277,8 @@
 			let body = { 
 				FoodID: currentFoodToAdd.foodId, 
 				quantity: currentFoodToAdd.quantity,
-				OptionalIngredientsSelectedIds: currentFoodToAdd.selectedOptionalIngredients
+				OptionalIngredientsSelectedIds: currentFoodToAdd.selectedOptionalIngredients,
+				ExclusiveIngredientSelectedId: currentFoodToAdd.ExclusiveIngredientSelectedId
 			}
 
 			$.ajax({

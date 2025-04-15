@@ -1,0 +1,84 @@
+﻿@model RestaurantSystem.Models.Order
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>Order</h4>
+    <hr />
+    <dl class="row">
+        
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.OrderDate)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.OrderDate)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Status)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Status)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.TotalPrice)
+        </dt>
+        <dd class="col-sm-10">
+            R$ @Html.DisplayFor(model => model.TotalPrice)
+        </dd>
+    </dl>
+
+     <h3>Itens do Pedido</h3>
+
+    <div class="row">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>
+                        Alimento
+                    </th>
+                    <th>
+                        Quantidade
+                    </th>
+                    <th>
+                        Ingredientes Opcionais
+                    </th>
+                    <th>
+                        Ingrediente Exclusivo
+                    </th>
+                    <th>
+                        Total do Item
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.OrderedItems)
+                {
+                    <tr id="food_@item.Id">
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Food.Name)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Quantity)
+                        </td>
+                        <td>
+                            @string.Join(", ", item.OptionalIngredientsSelected.Select(i => i.Name))
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.ExclusiveIngredientSelected.Name)
+                        </td>
+                        <td>
+                            R$ @Html.DisplayFor(modelItem => item.TotalPrice)
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>

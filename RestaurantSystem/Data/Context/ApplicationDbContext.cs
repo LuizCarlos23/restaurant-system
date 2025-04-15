@@ -28,6 +28,11 @@ namespace RestaurantSystem.Data.Context
                 .HasMany(f => f.ExclusiveIngredients)
                 .WithMany(i => i.ExclusiveForFoods)
                 .UsingEntity(j => j.ToTable("FoodExclusiveIngredients"));
+
+            builder.Entity<OrderItem>()
+                .HasMany(f => f.OptionalIngredientsSelected)
+                .WithMany()
+                .UsingEntity(j => j.ToTable("OrderItemOptinalIngredients"));
         }
     }
 }

@@ -11,13 +11,14 @@ namespace RestaurantSystem.Models
         [Required]
         public Food Food { get; set; }
 
-        [AllowNull]
-        public ICollection<Ingredient> OptionalIngredientsSelected { get; set; }
-
         [Required]
         public int Quantity { get; set; }
 
         [Required]
         public decimal TotalPrice { get; set; }
+
+        public ICollection<Ingredient>? OptionalIngredientsSelected { get; set; }
+        public Ingredient? ExclusiveIngredientSelected { get; set; }
+
     }
 }

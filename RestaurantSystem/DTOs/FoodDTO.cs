@@ -20,7 +20,7 @@ namespace RestaurantSystem.DTOs
         public string Description { get; set; }
 
         [Required(ErrorMessage = "Preço da comida é obrigatório.")]
-        [DisplayName("Preço")]
+        [DisplayName("Preço Base")]
         public decimal BasePrice { get; set; }
 
         public IFormFile? Image { get; set; }
@@ -28,9 +28,11 @@ namespace RestaurantSystem.DTOs
         public string? ImageMimeType { get; set; }
 
         [AllowNull]
+        [DisplayName("Ingredientes Opcionais")]
         public ICollection<long>? OptionalIngredients { get; set; }
 
         [AllowNull]
+        [DisplayName("Ingredientes Exclusivos")]
         public ICollection<long>? ExclusiveIngredients { get; set; }
     }
 }

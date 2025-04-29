@@ -1,61 +1,81 @@
 ﻿@model RestaurantSystem.DTOs.FoodDTO
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Criar Comida";
 }
 
-<h1>Create</h1>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
-<h4>Food</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create" enctype="multipart/form-data">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Name" class="control-label"></label>
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Description" class="control-label"></label>
-                <input asp-for="Description" class="form-control" />
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="BasePrice" class="control-label"></label>
-                <input asp-for="BasePrice" class="form-control" type="number" />
-                <span asp-validation-for="BasePrice" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Image" class="form-label"></label>
-                <input asp-for="Image" type="file" class="form-control" />
-                <span asp-validation-for="Image" class="text-danger"></span>
-            </div>
+<h1 class="text-center mb-4">Criar Novo Alimento</h1>
 
-            <div class="form-group">
-                <label asp-for="OptionalIngredients"></label>
-                <select asp-for="OptionalIngredients" asp-items="@ViewBag.OptionalIngredients" multiple="multiple" class="form-control">
-                </select>
-            </div>
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow rounded-3">
+            <div class="card-body">
+                <form asp-action="Create" enctype="multipart/form-data">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-            <div class="form-group">
-                <label asp-for="ExclusiveIngredients"></label>
-                <select asp-for="ExclusiveIngredients" asp-items="@ViewBag.ExclusiveIngredients" multiple="multiple" class="form-control">
-                </select>
-            </div>
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label fw-semibold"></label>
+                        <input asp-for="Name" class="form-control" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
 
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+                    <div class="form-group mb-3">
+                        <label asp-for="Description" class="form-label"></label>
+                        <textarea asp-for="Description" class="form-control" rows="2"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="BasePrice" class="form-label fw-semibold"></label>
+                        <input asp-for="BasePrice" type="number" class="form-control" />
+                        <span asp-validation-for="BasePrice" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Image" class="form-label fw-semibold"></label>
+                        <input asp-for="Image" type="file" class="form-control" />
+                        <span asp-validation-for="Image" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="OptionalIngredients" class="form-label fw-semibold"></label>
+                        <select id="OptionalIngredients" asp-for="OptionalIngredients" asp-items="@ViewBag.OptionalIngredients" multiple class="form-control"></select>
+
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ExclusiveIngredients" class="form-label fw-semibold"></label>
+                        <select id="ExclusiveIngredients" asp-for="ExclusiveIngredients" asp-items="@ViewBag.ExclusiveIngredients" multiple class="form-control"></select>
+
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a asp-action="Index" class="btn btn-secondary">Voltar à Lista</a>
+                        <input type="submit" value="Criar" class="btn btn-success" />
+                    </div>
+                </form>
             </div>
-        </form>
+        </div>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#OptionalIngredients').select2({
+                placeholder: "Selecione os ingredientes opcionais"
+            });
+
+            $('#ExclusiveIngredients').select2({
+                placeholder: "Selecione os ingredientes exclusivos"
+            });
+        });
+    </script>
 }

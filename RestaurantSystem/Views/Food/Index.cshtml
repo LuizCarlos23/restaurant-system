@@ -1,10 +1,10 @@
 ﻿@model IEnumerable<RestaurantSystem.Models.Food>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Catálogo de Comidas";
 }
 
-<h1>Index</h1>
+<h1 class="text-center fw-semibold mb-5">Catálogo de Comidas</h1>
 
 @if (TempData["SuccessMessage"] is not null)
 {
@@ -14,69 +14,89 @@
     </div>
 }
 
+<div class="d-flex justify-content-end mb-4">
+    <a asp-action="Create" class="btn btn-success">
+        <i class="bi bi-plus-circle me-2"></i> Criar Novo
+    </a>
+</div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
+<table class="table table-striped table-hover table-bordered shadow-sm rounded-4">
     <thead>
         <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Name)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Description)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.BasePrice)
-            </th>
-            <th></th>
+            <th>@Html.DisplayNameFor(model => model.Name)</th>
+            <th>@Html.DisplayNameFor(model => model.Description)</th>
+            <th>@Html.DisplayNameFor(model => model.BasePrice)</th>
+            <th>Ações</th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr id="food_@item.Id">
-            <td>
-                @Html.DisplayFor(modelItem => item.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Description)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.BasePrice)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <button onclick="foodRemoveHandle(@item.Id)">Delete</button>
-
-            </td>
-        </tr>
-}
+        @foreach (var item in Model)
+        {
+            <tr id="food_@item.Id">
+                <td>@Html.DisplayFor(modelItem => item.Name)</td>
+                <td>@Html.DisplayFor(modelItem => item.Description)</td>
+                <td>R$ @Html.DisplayFor(modelItem => item.BasePrice)</td>
+                <td>
+                    <a class="btn btn-warning btn-sm" asp-action="Edit" asp-route-id="@item.Id">Editar</a> |
+                    <a class="btn btn-info btn-sm" asp-action="Details" asp-route-id="@item.Id">Detalhes</a> |
+                    <button class="btn btn-danger btn-sm" onclick="foodRemoveHandle(@item.Id)">Excluir</button>
+                </td>
+            </tr>
+        }
     </tbody>
 </table>
+
+<!-- Modal de confirmação para exclusão -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Tem certeza de que deseja excluir esta comida? Esta ação não pode ser desfeita.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Excluir</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
     @if (Model.Count() > 0)
     {
         <script>
+            let foodIdToDelete = null;
+
             function foodRemoveHandle(id) {
-                if (!window.confirm("Tem certeza que deseja excluir essa comida?")) {
+                foodIdToDelete = id;
+                var modal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+                modal.show();
+            }
+
+            document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
+                if (foodIdToDelete === null) {
                     return;
                 }
 
                 $.ajax({
                     url: "@Url.Action("Delete")",
                     method: "post",
-                    data: {id},
+                    data: {id: foodIdToDelete},
                     success: function () {
-                        $(`#food_${id}`).remove();
-                        alert("Comida deletado com sucesso!")
+                        $(`#food_${foodIdToDelete}`).remove();
+                        alert("Comida excluída com sucesso!");
+                        $('#confirmDeleteModal').modal('hide');
+                    },
+                    error: function () {
+                        alert("Ocorreu um erro ao tentar excluir a comida.");
+                        $('#confirmDeleteModal').modal('hide');
                     }
-
-                })
-            }
+                });
+            });
         </script>
     }
-
 }

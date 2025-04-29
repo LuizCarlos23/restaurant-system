@@ -1,143 +1,169 @@
 ﻿@model RestaurantSystem.Models.Food
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Detalhes da Comida";
 }
 
-<div>
-    <div class="d-flex justify-content-center">
-        <div>
-            <h4 class="text-center">Comida</h4>
-        </div>
+<style>
+    .food-image {
+        width: 100%;
+        max-width: 500px;
+        max-height: 500px;
+        object-fit: cover;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+</style>
+
+<div class="container my-5">
+    <div class="text-center">
+        <h4 class="fw-semibold mb-4">Detalhes do Alimento</h4>
     </div>
-    
-    <hr />
+
     <div class="row">
-        <div class="col">
-            <img style="max-width: 500px; max-height: 500px;" src="@Url.Action("GetImage", "Food", new { Id = Model.Id} )" class="img-thumbnail" alt="Imamge do alimento @Model.Id" id="foodImage" onerror="this.onerror=null; this.src='/img/default-image.jpg';">
+        <div class="col-md-6">
+            <div class="d-flex justify-content-center mb-4">
+                <img src="@Url.Action("GetImage", "Food", new { Id = Model.Id })"
+                     class="img-fluid food-image"
+                     alt="Imagem do alimento @Model.Name"
+                     onerror="this.onerror=null; this.src='/img/default-image.jpg';">
+            </div>
 
             <dl class="row">
-                <dt class="col-sm-2">
-                    @Html.DisplayNameFor(model => model.Name)
-                </dt>
-                <dd class="col-sm-10">
-                    @Html.DisplayFor(model => model.Name)
-                </dd>
-                <dt class="col-sm-2">
-                    @Html.DisplayNameFor(model => model.Description)
-                </dt>
-                <dd class="col-sm-10">
-                    @Html.DisplayFor(model => model.Description)
-                </dd>
-                <dt class="col-sm-2">
-                    @Html.DisplayNameFor(model => model.BasePrice)
-                </dt>
-                <dd class="col-sm-10">
-                    @Html.DisplayFor(model => model.BasePrice)
-                </dd>
+                <dt class="col-sm-4 fw-bold">Nome:</dt>
+                <dd class="col-sm-8">@Html.DisplayFor(model => model.Name)</dd>
+
+                <dt class="col-sm-4 fw-bold">Descrição:</dt>
+                <dd class="col-sm-8">@Html.DisplayFor(model => model.Description)</dd>
+
+                <dt class="col-sm-4 fw-bold">Preço Base:</dt>
+                <dd class="col-sm-8">R$ @Html.DisplayFor(model => model.BasePrice)</dd>
             </dl>
         </div>
 
-        <div class="col">
-            <h4 class="text-center">Ingredientes Opcionais</h4>
-
-            <table class="table ">
+        <div class="col-md-6">
+            <h4 class="text-center mb-3">Ingredientes Opcionais</h4>
+            <table class="table table-bordered table-striped">
                 <thead>
                     <tr>
-                        <th>
-                            Nome
-                        </th>
-                        <th>
-                            Preço
-                        </th>
-                        <th></th>
+                        <th class="w-50">Nome</th>
+                        <th class="w-25">Preço</th>
+                        <th class="w-25">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @if (Model.OptionalIngredients is not null)
+                    @if (Model.OptionalIngredients is not null && Model.OptionalIngredients.Any())
                     {
                         @foreach (var item in Model.OptionalIngredients)
                         {
                             <tr id="ingredient_@item.Id">
+                                <td>@Html.DisplayFor(modelItem => item.Name)</td>
+                                <td>R$ @Html.DisplayFor(modelItem => item.Price)</td>
                                 <td>
-                                    @Html.DisplayFor(modelItem => item.Name)
-                                </td>
-                                <td>
-                                    @Html.DisplayFor(modelItem => item.Price)
-                                </td>
-                                <td>
-                                    <button onclick="removeIngredientFromFoodHandle(@Model.Id, @item.Id)">Remover</button>
+                                    <button class="btn btn-danger btn-sm" onclick="removeIngredientFromFoodHandle(@Model.Id, @item.Id)">
+                                        Remover
+                                    </button>
                                 </td>
                             </tr>
                         }
                     }
+                    else
+                    {
+                        <tr><td colspan="3" class="text-center">Nenhum ingrediente opcional disponível</td></tr>
+                    }
                 </tbody>
             </table>
 
-            <h4 class="text-center">Ingredientes Exclusivos</h4>
-
-            <table class="table ">
+            <h4 class="text-center mb-3">Ingredientes Exclusivos</h4>
+            <table class="table table-bordered table-striped">
                 <thead>
                     <tr>
-                        <th>
-                            Nome
-                        </th>
-                        <th>
-                            Preço
-                        </th>
-                        <th></th>
+                        <th class="w-50">Nome</th>
+                        <th class="w-25">Preço</th>
+                        <th class="w-25">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @if (Model.ExclusiveIngredients is not null)
+                    @if (Model.ExclusiveIngredients is not null && Model.ExclusiveIngredients.Any())
                     {
                         @foreach (var item in Model.ExclusiveIngredients)
                         {
                             <tr id="ingredient_@item.Id">
+                                <td>@Html.DisplayFor(modelItem => item.Name)</td>
+                                <td>R$ @Html.DisplayFor(modelItem => item.Price)</td>
                                 <td>
-                                    @Html.DisplayFor(modelItem => item.Name)
-                                </td>
-                                <td>
-                                    @Html.DisplayFor(modelItem => item.Price)
-                                </td>
-                                <td>
-                                    <button onclick="removeIngredientFromFoodHandle(@Model.Id, @item.Id)">Remover</button>
+                                    <button class="btn btn-danger btn-sm" onclick="removeIngredientFromFoodHandle(@Model.Id, @item.Id)">
+                                        Remover
+                                    </button>
                                 </td>
                             </tr>
                         }
+                    }
+                    else
+                    {
+                        <tr><td colspan="3" class="text-center">Nenhum ingrediente exclusivo disponível</td></tr>
                     }
                 </tbody>
             </table>
         </div>
     </div>
+
+    <div class="text-center mt-4">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning btn-lg mx-2">
+            <i class="bi bi-pencil me-2"></i> Editar
+        </a>
+        <a asp-action="Index" class="btn btn-secondary btn-lg mx-2">
+            <i class="bi bi-arrow-left-circle me-2"></i> Voltar à Lista
+        </a>
+    </div>
 </div>
 
-
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+<!-- Modal de confirmação de remoção de ingrediente -->
+<div class="modal fade" id="confirmRemoveIngredientModal" tabindex="-1" aria-labelledby="confirmRemoveIngredientModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmRemoveIngredientModalLabel">Confirmar Remoção</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Tem certeza de que deseja remover este ingrediente?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmRemoveIngredientBtn">Remover</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
-
     <script>
+        let ingredientIdToRemove = null;
+
         function removeIngredientFromFoodHandle(foodId, ingredientId) {
-            if (!window.confirm("Tem certeza que deseja remover esse ingrediente opcional da comida?"))
-                return;
+            ingredientIdToRemove = ingredientId;
+            var modal = new bootstrap.Modal(document.getElementById('confirmRemoveIngredientModal'));
+            modal.show();
+        }
+
+        document.getElementById('confirmRemoveIngredientBtn').addEventListener('click', function () {
+            if (ingredientIdToRemove === null) return;
 
             $.ajax({
                 url: "@Url.Action("RemoveIngredient", "Food")",
-                method: "post",
-                data: { foodId, ingredientId },
-                success: () => {
+                method: "POST",
+                data: { foodId: @Model.Id, ingredientId: ingredientIdToRemove },
+                success: function () {
                     alert("Ingrediente removido com sucesso!");
-                    $(`#ingredient_${ingredientId}`).remove();
+                    $(`#ingredient_${ingredientIdToRemove}`).remove();
+                    $('#confirmRemoveIngredientModal').modal('hide');
                 },
-                error: () => {
-                    alert("Ocorreu um error ao remover o ingrediente!");
+                error: function () {
+                    alert("Ocorreu um erro ao remover o ingrediente.");
+                    $('#confirmRemoveIngredientModal').modal('hide');
                 }
             });
-        }
+        });
     </script>
-
 }
